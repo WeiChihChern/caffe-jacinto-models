@@ -1,0 +1,3517 @@
+I0512 11:23:09.887946   498 caffe.cpp:902] This is NVCaffe 0.17.0 started at Tue May 12 11:23:09 2020
+I0512 11:23:10.311076   498 caffe.cpp:904] CuDNN version: 7605
+I0512 11:23:10.311081   498 caffe.cpp:905] CuBLAS version: 10202
+I0512 11:23:10.311084   498 caffe.cpp:906] CUDA version: 10020
+I0512 11:23:10.311087   498 caffe.cpp:907] CUDA driver version: 10020
+I0512 11:23:10.311089   498 caffe.cpp:908] Arguments: 
+[0]: /workspace/caffe-jacinto/build/tools/caffe.bin
+[1]: test_detection
+[2]: --model=training/EYES/JDetNet/20200511_10-37_ssdSize512x512_dsFac32_dsTypePSP_rWidthHeight768x320_batchNorm0/test/test.prototxt
+[3]: --iterations=85
+[4]: --display_sparsity=1
+[5]: --weights=training/EYES/JDetNet/20200511_10-37_ssdSize512x512_dsFac32_dsTypePSP_rWidthHeight768x320_batchNorm0/sparse/EYES_ssdJacintoNetV2_iter_20000.caffemodel
+[6]: --gpu
+[7]: 0
+I0512 11:23:10.332355   498 gpu_memory.cpp:105] GPUMemory::Manager initialized
+I0512 11:23:10.332383   498 gpu_memory.cpp:107] Total memory: 16900227072, Free: 16697655296, dev_info[0]: total=16900227072 free=16697655296
+I0512 11:23:10.332581   498 caffe.cpp:406] Use GPU with device ID 0
+I0512 11:23:10.332700   498 caffe.cpp:409] GPU device name: Quadro RTX 5000
+I0512 11:23:10.365586   498 net.cpp:80] Initializing net from parameters: 
+name: "ssdJacintoNetV2_test"
+state {
+  phase: TEST
+  level: 0
+}
+layer {
+  name: "data"
+  type: "AnnotatedData"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST
+  }
+  transform_param {
+    mean_value: 0
+    mean_value: 0
+    mean_value: 0
+    force_color: false
+    resize_param {
+      prob: 1
+      resize_mode: WARP
+      height: 320
+      width: 768
+      interp_mode: LINEAR
+    }
+    crop_h: 320
+    crop_w: 768
+  }
+  data_param {
+    source: "/workspace/data/EYES/lmdb/official_test_850images"
+    batch_size: 10
+    backend: LMDB
+    threads: 4
+    parser_threads: 4
+  }
+  annotated_data_param {
+    batch_sampler {
+    }
+    label_map_file: "/workspace/caffe-jacinto/data/EYES/labelmap_eye.prototxt"
+  }
+}
+layer {
+  name: "data/bias"
+  type: "Bias"
+  bottom: "data"
+  top: "data/bias"
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  bias_param {
+    filler {
+      type: "constant"
+      value: -128
+    }
+  }
+}
+layer {
+  name: "conv1a"
+  type: "Convolution"
+  bottom: "data/bias"
+  top: "conv1a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 32
+    bias_term: true
+    pad: 2
+    kernel_size: 5
+    group: 1
+    stride: 2
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "conv1a/bn"
+  type: "BatchNorm"
+  bottom: "conv1a"
+  top: "conv1a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "conv1a/relu"
+  type: "ReLU"
+  bottom: "conv1a"
+  top: "conv1a"
+}
+layer {
+  name: "conv1b"
+  type: "Convolution"
+  bottom: "conv1a"
+  top: "conv1b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 32
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "conv1b/bn"
+  type: "BatchNorm"
+  bottom: "conv1b"
+  top: "conv1b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "conv1b/relu"
+  type: "ReLU"
+  bottom: "conv1b"
+  top: "conv1b"
+}
+layer {
+  name: "pool1"
+  type: "Pooling"
+  bottom: "conv1b"
+  top: "pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "res2a_branch2a"
+  type: "Convolution"
+  bottom: "pool1"
+  top: "res2a_branch2a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res2a_branch2a/bn"
+  type: "BatchNorm"
+  bottom: "res2a_branch2a"
+  top: "res2a_branch2a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res2a_branch2a/relu"
+  type: "ReLU"
+  bottom: "res2a_branch2a"
+  top: "res2a_branch2a"
+}
+layer {
+  name: "res2a_branch2b"
+  type: "Convolution"
+  bottom: "res2a_branch2a"
+  top: "res2a_branch2b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res2a_branch2b/bn"
+  type: "BatchNorm"
+  bottom: "res2a_branch2b"
+  top: "res2a_branch2b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res2a_branch2b/relu"
+  type: "ReLU"
+  bottom: "res2a_branch2b"
+  top: "res2a_branch2b"
+}
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "res2a_branch2b"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "res3a_branch2a"
+  type: "Convolution"
+  bottom: "pool2"
+  top: "res3a_branch2a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res3a_branch2a/bn"
+  type: "BatchNorm"
+  bottom: "res3a_branch2a"
+  top: "res3a_branch2a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res3a_branch2a/relu"
+  type: "ReLU"
+  bottom: "res3a_branch2a"
+  top: "res3a_branch2a"
+}
+layer {
+  name: "res3a_branch2b"
+  type: "Convolution"
+  bottom: "res3a_branch2a"
+  top: "res3a_branch2b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res3a_branch2b/bn"
+  type: "BatchNorm"
+  bottom: "res3a_branch2b"
+  top: "res3a_branch2b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res3a_branch2b/relu"
+  type: "ReLU"
+  bottom: "res3a_branch2b"
+  top: "res3a_branch2b"
+}
+layer {
+  name: "pool3"
+  type: "Pooling"
+  bottom: "res3a_branch2b"
+  top: "pool3"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "res4a_branch2a"
+  type: "Convolution"
+  bottom: "pool3"
+  top: "res4a_branch2a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res4a_branch2a/bn"
+  type: "BatchNorm"
+  bottom: "res4a_branch2a"
+  top: "res4a_branch2a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res4a_branch2a/relu"
+  type: "ReLU"
+  bottom: "res4a_branch2a"
+  top: "res4a_branch2a"
+}
+layer {
+  name: "res4a_branch2b"
+  type: "Convolution"
+  bottom: "res4a_branch2a"
+  top: "res4a_branch2b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res4a_branch2b/bn"
+  type: "BatchNorm"
+  bottom: "res4a_branch2b"
+  top: "res4a_branch2b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res4a_branch2b/relu"
+  type: "ReLU"
+  bottom: "res4a_branch2b"
+  top: "res4a_branch2b"
+}
+layer {
+  name: "pool4"
+  type: "Pooling"
+  bottom: "res4a_branch2b"
+  top: "pool4"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "res5a_branch2a"
+  type: "Convolution"
+  bottom: "pool4"
+  top: "res5a_branch2a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res5a_branch2a/bn"
+  type: "BatchNorm"
+  bottom: "res5a_branch2a"
+  top: "res5a_branch2a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res5a_branch2a/relu"
+  type: "ReLU"
+  bottom: "res5a_branch2a"
+  top: "res5a_branch2a"
+}
+layer {
+  name: "res5a_branch2b"
+  type: "Convolution"
+  bottom: "res5a_branch2a"
+  top: "res5a_branch2b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res5a_branch2b/bn"
+  type: "BatchNorm"
+  bottom: "res5a_branch2b"
+  top: "res5a_branch2b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res5a_branch2b/relu"
+  type: "ReLU"
+  bottom: "res5a_branch2b"
+  top: "res5a_branch2b"
+}
+layer {
+  name: "pool6"
+  type: "Pooling"
+  bottom: "res5a_branch2b"
+  top: "pool6"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+    pad: 0
+  }
+}
+layer {
+  name: "pool7"
+  type: "Pooling"
+  bottom: "pool6"
+  top: "pool7"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+    pad: 0
+  }
+}
+layer {
+  name: "pool8"
+  type: "Pooling"
+  bottom: "pool7"
+  top: "pool8"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+    pad: 0
+  }
+}
+layer {
+  name: "pool9"
+  type: "Pooling"
+  bottom: "pool8"
+  top: "pool9"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+    pad: 0
+  }
+}
+layer {
+  name: "ctx_output1"
+  type: "Convolution"
+  bottom: "res3a_branch2b"
+  top: "ctx_output1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output1/relu"
+  type: "ReLU"
+  bottom: "ctx_output1"
+  top: "ctx_output1"
+}
+layer {
+  name: "ctx_output2"
+  type: "Convolution"
+  bottom: "res5a_branch2b"
+  top: "ctx_output2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output2/relu"
+  type: "ReLU"
+  bottom: "ctx_output2"
+  top: "ctx_output2"
+}
+layer {
+  name: "ctx_output3"
+  type: "Convolution"
+  bottom: "pool6"
+  top: "ctx_output3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output3/relu"
+  type: "ReLU"
+  bottom: "ctx_output3"
+  top: "ctx_output3"
+}
+layer {
+  name: "ctx_output4"
+  type: "Convolution"
+  bottom: "pool7"
+  top: "ctx_output4"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output4/relu"
+  type: "ReLU"
+  bottom: "ctx_output4"
+  top: "ctx_output4"
+}
+layer {
+  name: "ctx_output5"
+  type: "Convolution"
+  bottom: "pool8"
+  top: "ctx_output5"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output5/relu"
+  type: "ReLU"
+  bottom: "ctx_output5"
+  top: "ctx_output5"
+}
+layer {
+  name: "ctx_output6"
+  type: "Convolution"
+  bottom: "pool9"
+  top: "ctx_output6"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output6/relu"
+  type: "ReLU"
+  bottom: "ctx_output6"
+  top: "ctx_output6"
+}
+layer {
+  name: "ctx_output1/relu_mbox_loc"
+  type: "Convolution"
+  bottom: "ctx_output1"
+  top: "ctx_output1/relu_mbox_loc"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 16
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output1/relu_mbox_loc_perm"
+  type: "Permute"
+  bottom: "ctx_output1/relu_mbox_loc"
+  top: "ctx_output1/relu_mbox_loc_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "ctx_output1/relu_mbox_loc_flat"
+  type: "Flatten"
+  bottom: "ctx_output1/relu_mbox_loc_perm"
+  top: "ctx_output1/relu_mbox_loc_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "ctx_output1/relu_mbox_conf"
+  type: "Convolution"
+  bottom: "ctx_output1"
+  top: "ctx_output1/relu_mbox_conf"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 16
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output1/relu_mbox_conf_perm"
+  type: "Permute"
+  bottom: "ctx_output1/relu_mbox_conf"
+  top: "ctx_output1/relu_mbox_conf_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "ctx_output1/relu_mbox_conf_flat"
+  type: "Flatten"
+  bottom: "ctx_output1/relu_mbox_conf_perm"
+  top: "ctx_output1/relu_mbox_conf_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "ctx_output1/relu_mbox_priorbox"
+  type: "PriorBox"
+  bottom: "ctx_output1"
+  bottom: "data"
+  top: "ctx_output1/relu_mbox_priorbox"
+  prior_box_param {
+    min_size: 14.72
+    max_size: 36.8
+    aspect_ratio: 2
+    flip: true
+    clip: false
+    variance: 0.1
+    variance: 0.1
+    variance: 0.2
+    variance: 0.2
+    offset: 0.5
+  }
+}
+layer {
+  name: "ctx_output2/relu_mbox_loc"
+  type: "Convolution"
+  bottom: "ctx_output2"
+  top: "ctx_output2/relu_mbox_loc"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 24
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output2/relu_mbox_loc_perm"
+  type: "Permute"
+  bottom: "ctx_output2/relu_mbox_loc"
+  top: "ctx_output2/relu_mbox_loc_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "ctx_output2/relu_mbox_loc_flat"
+  type: "Flatten"
+  bottom: "ctx_output2/relu_mbox_loc_perm"
+  top: "ctx_output2/relu_mbox_loc_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "ctx_output2/relu_mbox_conf"
+  type: "Convolution"
+  bottom: "ctx_output2"
+  top: "ctx_output2/relu_mbox_conf"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 24
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output2/relu_mbox_conf_perm"
+  type: "Permute"
+  bottom: "ctx_output2/relu_mbox_conf"
+  top: "ctx_output2/relu_mbox_conf_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "ctx_output2/relu_mbox_conf_flat"
+  type: "Flatten"
+  bottom: "ctx_output2/relu_mbox_conf_perm"
+  top: "ctx_output2/relu_mbox_conf_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "ctx_output2/relu_mbox_priorbox"
+  type: "PriorBox"
+  bottom: "ctx_output2"
+  bottom: "data"
+  top: "ctx_output2/relu_mbox_priorbox"
+  prior_box_param {
+    min_size: 36.8
+    max_size: 110.4
+    aspect_ratio: 2
+    aspect_ratio: 3
+    flip: true
+    clip: false
+    variance: 0.1
+    variance: 0.1
+    variance: 0.2
+    variance: 0.2
+    offset: 0.5
+  }
+}
+layer {
+  name: "ctx_output3/relu_mbox_loc"
+  type: "Convolution"
+  bottom: "ctx_output3"
+  top: "ctx_output3/relu_mbox_loc"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 24
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output3/relu_mbox_loc_perm"
+  type: "Permute"
+  bottom: "ctx_output3/relu_mbox_loc"
+  top: "ctx_output3/relu_mbox_loc_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "ctx_output3/relu_mbox_loc_flat"
+  type: "Flatten"
+  bottom: "ctx_output3/relu_mbox_loc_perm"
+  top: "ctx_output3/relu_mbox_loc_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "ctx_output3/relu_mbox_conf"
+  type: "Convolution"
+  bottom: "ctx_output3"
+  top: "ctx_output3/relu_mbox_conf"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 24
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output3/relu_mbox_conf_perm"
+  type: "Permute"
+  bottom: "ctx_output3/relu_mbox_conf"
+  top: "ctx_output3/relu_mbox_conf_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "ctx_output3/relu_mbox_conf_flat"
+  type: "Flatten"
+  bottom: "ctx_output3/relu_mbox_conf_perm"
+  top: "ctx_output3/relu_mbox_conf_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "ctx_output3/relu_mbox_priorbox"
+  type: "PriorBox"
+  bottom: "ctx_output3"
+  bottom: "data"
+  top: "ctx_output3/relu_mbox_priorbox"
+  prior_box_param {
+    min_size: 110.4
+    max_size: 184
+    aspect_ratio: 2
+    aspect_ratio: 3
+    flip: true
+    clip: false
+    variance: 0.1
+    variance: 0.1
+    variance: 0.2
+    variance: 0.2
+    offset: 0.5
+  }
+}
+layer {
+  name: "ctx_output4/relu_mbox_loc"
+  type: "Convolution"
+  bottom: "ctx_output4"
+  top: "ctx_output4/relu_mbox_loc"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 24
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output4/relu_mbox_loc_perm"
+  type: "Permute"
+  bottom: "ctx_output4/relu_mbox_loc"
+  top: "ctx_output4/relu_mbox_loc_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "ctx_output4/relu_mbox_loc_flat"
+  type: "Flatten"
+  bottom: "ctx_output4/relu_mbox_loc_perm"
+  top: "ctx_output4/relu_mbox_loc_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "ctx_output4/relu_mbox_conf"
+  type: "Convolution"
+  bottom: "ctx_output4"
+  top: "ctx_output4/relu_mbox_conf"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 24
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output4/relu_mbox_conf_perm"
+  type: "Permute"
+  bottom: "ctx_output4/relu_mbox_conf"
+  top: "ctx_output4/relu_mbox_conf_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "ctx_output4/relu_mbox_conf_flat"
+  type: "Flatten"
+  bottom: "ctx_output4/relu_mbox_conf_perm"
+  top: "ctx_output4/relu_mbox_conf_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "ctx_output4/relu_mbox_priorbox"
+  type: "PriorBox"
+  bottom: "ctx_output4"
+  bottom: "data"
+  top: "ctx_output4/relu_mbox_priorbox"
+  prior_box_param {
+    min_size: 184
+    max_size: 257.6
+    aspect_ratio: 2
+    aspect_ratio: 3
+    flip: true
+    clip: false
+    variance: 0.1
+    variance: 0.1
+    variance: 0.2
+    variance: 0.2
+    offset: 0.5
+  }
+}
+layer {
+  name: "ctx_output5/relu_mbox_loc"
+  type: "Convolution"
+  bottom: "ctx_output5"
+  top: "ctx_output5/relu_mbox_loc"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 16
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output5/relu_mbox_loc_perm"
+  type: "Permute"
+  bottom: "ctx_output5/relu_mbox_loc"
+  top: "ctx_output5/relu_mbox_loc_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "ctx_output5/relu_mbox_loc_flat"
+  type: "Flatten"
+  bottom: "ctx_output5/relu_mbox_loc_perm"
+  top: "ctx_output5/relu_mbox_loc_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "ctx_output5/relu_mbox_conf"
+  type: "Convolution"
+  bottom: "ctx_output5"
+  top: "ctx_output5/relu_mbox_conf"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 16
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output5/relu_mbox_conf_perm"
+  type: "Permute"
+  bottom: "ctx_output5/relu_mbox_conf"
+  top: "ctx_output5/relu_mbox_conf_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "ctx_output5/relu_mbox_conf_flat"
+  type: "Flatten"
+  bottom: "ctx_output5/relu_mbox_conf_perm"
+  top: "ctx_output5/relu_mbox_conf_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "ctx_output5/relu_mbox_priorbox"
+  type: "PriorBox"
+  bottom: "ctx_output5"
+  bottom: "data"
+  top: "ctx_output5/relu_mbox_priorbox"
+  prior_box_param {
+    min_size: 257.6
+    max_size: 331.2
+    aspect_ratio: 2
+    flip: true
+    clip: false
+    variance: 0.1
+    variance: 0.1
+    variance: 0.2
+    variance: 0.2
+    offset: 0.5
+  }
+}
+layer {
+  name: "ctx_output6/relu_mbox_loc"
+  type: "Convolution"
+  bottom: "ctx_output6"
+  top: "ctx_output6/relu_mbox_loc"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 16
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output6/relu_mbox_loc_perm"
+  type: "Permute"
+  bottom: "ctx_output6/relu_mbox_loc"
+  top: "ctx_output6/relu_mbox_loc_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "ctx_output6/relu_mbox_loc_flat"
+  type: "Flatten"
+  bottom: "ctx_output6/relu_mbox_loc_perm"
+  top: "ctx_output6/relu_mbox_loc_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "ctx_output6/relu_mbox_conf"
+  type: "Convolution"
+  bottom: "ctx_output6"
+  top: "ctx_output6/relu_mbox_conf"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 16
+    bias_term: true
+    pad: 0
+    kernel_size: 1
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "ctx_output6/relu_mbox_conf_perm"
+  type: "Permute"
+  bottom: "ctx_output6/relu_mbox_conf"
+  top: "ctx_output6/relu_mbox_conf_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "ctx_output6/relu_mbox_conf_flat"
+  type: "Flatten"
+  bottom: "ctx_output6/relu_mbox_conf_perm"
+  top: "ctx_output6/relu_mbox_conf_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "ctx_output6/relu_mbox_priorbox"
+  type: "PriorBox"
+  bottom: "ctx_output6"
+  bottom: "data"
+  top: "ctx_output6/relu_mbox_priorbox"
+  prior_box_param {
+    min_size: 331.2
+    max_size: 404.8
+    aspect_ratio: 2
+    flip: true
+    clip: false
+    variance: 0.1
+    variance: 0.1
+    variance: 0.2
+    variance: 0.2
+    offset: 0.5
+  }
+}
+layer {
+  name: "mbox_loc"
+  type: "Concat"
+  bottom: "ctx_output1/relu_mbox_loc_flat"
+  bottom: "ctx_output2/relu_mbox_loc_flat"
+  bottom: "ctx_output3/relu_mbox_loc_flat"
+  bottom: "ctx_output4/relu_mbox_loc_flat"
+  bottom: "ctx_output5/relu_mbox_loc_flat"
+  bottom: "ctx_output6/relu_mbox_loc_flat"
+  top: "mbox_loc"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "mbox_conf"
+  type: "Concat"
+  bottom: "ctx_output1/relu_mbox_conf_flat"
+  bottom: "ctx_output2/relu_mbox_conf_flat"
+  bottom: "ctx_output3/relu_mbox_conf_flat"
+  bottom: "ctx_output4/relu_mbox_conf_flat"
+  bottom: "ctx_output5/relu_mbox_conf_flat"
+  bottom: "ctx_output6/relu_mbox_conf_flat"
+  top: "mbox_conf"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "mbox_priorbox"
+  type: "Concat"
+  bottom: "ctx_output1/relu_mbox_priorbox"
+  bottom: "ctx_output2/relu_mbox_priorbox"
+  bottom: "ctx_output3/relu_mbox_priorbox"
+  bottom: "ctx_output4/relu_mbox_priorbox"
+  bottom: "ctx_output5/relu_mbox_priorbox"
+  bottom: "ctx_output6/relu_mbox_priorbox"
+  top: "mbox_priorbox"
+  concat_param {
+    axis: 2
+  }
+}
+layer {
+  name: "mbox_conf_reshape"
+  type: "Reshape"
+  bottom: "mbox_conf"
+  top: "mbox_conf_reshape"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: -1
+      dim: 4
+    }
+  }
+}
+layer {
+  name: "mbox_conf_softmax"
+  type: "Softmax"
+  bottom: "mbox_conf_reshape"
+  top: "mbox_conf_softmax"
+  softmax_param {
+    axis: 2
+  }
+}
+layer {
+  name: "mbox_conf_flatten"
+  type: "Flatten"
+  bottom: "mbox_conf_softmax"
+  top: "mbox_conf_flatten"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "detection_out"
+  type: "DetectionOutput"
+  bottom: "mbox_loc"
+  bottom: "mbox_conf_flatten"
+  bottom: "mbox_priorbox"
+  top: "detection_out"
+  include {
+    phase: TEST
+  }
+  detection_output_param {
+    num_classes: 4
+    share_location: true
+    background_label_id: 0
+    nms_param {
+      nms_threshold: 0.45
+      top_k: 400
+    }
+    save_output_param {
+      output_directory: ""
+      output_name_prefix: "comp4_det_test_"
+      output_format: "VOC"
+      label_map_file: "/workspace/caffe-jacinto/data/EYES/labelmap_eye.prototxt"
+      name_size_file: "/workspace/caffe-jacinto/data/EYES/test_name_size.txt"
+      num_test_image: 850
+    }
+    code_type: CENTER_SIZE
+    keep_top_k: 200
+    confidence_threshold: 0.01
+  }
+}
+layer {
+  name: "detection_eval"
+  type: "DetectionEvaluate"
+  bottom: "detection_out"
+  bottom: "label"
+  top: "detection_eval"
+  include {
+    phase: TEST
+  }
+  detection_evaluate_param {
+    num_classes: 4
+    background_label_id: 0
+    overlap_threshold: 0.5
+    evaluate_difficult_gt: false
+    name_size_file: "/workspace/caffe-jacinto/data/EYES/test_name_size.txt"
+  }
+}
+I0512 11:23:10.366556   498 net.cpp:110] Using FLOAT as default forward math type
+I0512 11:23:10.366577   498 net.cpp:116] Using FLOAT as default backward math type
+I0512 11:23:10.366587   498 layer_factory.hpp:172] Creating layer 'data' of type 'AnnotatedData'
+I0512 11:23:10.366595   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:10.366739   498 internal_thread.cpp:19] Starting 1 internal thread(s) on device 0
+I0512 11:23:10.366888   498 net.cpp:200] Created Layer data (0)
+I0512 11:23:10.367110   498 net.cpp:542] data -> data
+I0512 11:23:10.367125   503 blocking_queue.cpp:40] Data layer prefetch queue empty
+I0512 11:23:10.367146   498 net.cpp:542] data -> label
+I0512 11:23:10.367167   498 data_reader.cpp:58] Data Reader threads: 1, out queues: 1, depth: 10
+I0512 11:23:10.367187   498 internal_thread.cpp:19] Starting 1 internal thread(s) on device 0
+I0512 11:23:10.367527   504 db_lmdb.cpp:36] Opened lmdb /workspace/data/EYES/lmdb/official_test_850images
+I0512 11:23:10.370656   498 annotated_data_layer.cpp:105] output data size: 10,3,320,768
+I0512 11:23:10.370736   498 annotated_data_layer.cpp:150] (0) Output data size: 10, 3, 320, 768
+I0512 11:23:10.370787   498 internal_thread.cpp:19] Starting 1 internal thread(s) on device 0
+I0512 11:23:10.370883   498 net.cpp:260] Setting up data
+I0512 11:23:10.370893   498 net.cpp:267] TEST Top shape for layer 0 'data' 10 3 320 768 (7372800)
+I0512 11:23:10.371083   498 net.cpp:267] TEST Top shape for layer 0 'data' 1 1 2 8 (16)
+I0512 11:23:10.371083   505 data_layer.cpp:105] (0) Parser threads: 1
+I0512 11:23:10.371100   498 layer_factory.hpp:172] Creating layer 'data_data_0_split' of type 'Split'
+I0512 11:23:10.371101   505 data_layer.cpp:107] (0) Transformer threads: 1
+I0512 11:23:10.371110   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:10.371126   498 net.cpp:200] Created Layer data_data_0_split (1)
+I0512 11:23:10.371136   498 net.cpp:572] data_data_0_split <- data
+I0512 11:23:10.371158   498 net.cpp:542] data_data_0_split -> data_data_0_split_0
+I0512 11:23:10.371170   498 net.cpp:542] data_data_0_split -> data_data_0_split_1
+I0512 11:23:10.371179   498 net.cpp:542] data_data_0_split -> data_data_0_split_2
+I0512 11:23:10.371187   498 net.cpp:542] data_data_0_split -> data_data_0_split_3
+I0512 11:23:10.371197   498 net.cpp:542] data_data_0_split -> data_data_0_split_4
+I0512 11:23:10.371206   498 net.cpp:542] data_data_0_split -> data_data_0_split_5
+I0512 11:23:10.371212   498 net.cpp:542] data_data_0_split -> data_data_0_split_6
+I0512 11:23:10.371356   498 net.cpp:260] Setting up data_data_0_split
+I0512 11:23:10.371366   498 net.cpp:267] TEST Top shape for layer 1 'data_data_0_split' 10 3 320 768 (7372800)
+I0512 11:23:10.371376   498 net.cpp:267] TEST Top shape for layer 1 'data_data_0_split' 10 3 320 768 (7372800)
+I0512 11:23:10.371385   498 net.cpp:267] TEST Top shape for layer 1 'data_data_0_split' 10 3 320 768 (7372800)
+I0512 11:23:10.371393   498 net.cpp:267] TEST Top shape for layer 1 'data_data_0_split' 10 3 320 768 (7372800)
+I0512 11:23:10.371402   498 net.cpp:267] TEST Top shape for layer 1 'data_data_0_split' 10 3 320 768 (7372800)
+I0512 11:23:10.371412   498 net.cpp:267] TEST Top shape for layer 1 'data_data_0_split' 10 3 320 768 (7372800)
+I0512 11:23:10.371421   498 net.cpp:267] TEST Top shape for layer 1 'data_data_0_split' 10 3 320 768 (7372800)
+I0512 11:23:10.371443   498 layer_factory.hpp:172] Creating layer 'data/bias' of type 'Bias'
+I0512 11:23:10.371450   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:10.371466   498 net.cpp:200] Created Layer data/bias (2)
+I0512 11:23:10.371474   498 net.cpp:572] data/bias <- data_data_0_split_0
+I0512 11:23:10.371481   498 net.cpp:542] data/bias -> data/bias
+I0512 11:23:10.371647   498 net.cpp:260] Setting up data/bias
+I0512 11:23:10.371655   498 net.cpp:267] TEST Top shape for layer 2 'data/bias' 10 3 320 768 (7372800)
+I0512 11:23:10.371682   498 layer_factory.hpp:172] Creating layer 'conv1a' of type 'Convolution'
+I0512 11:23:10.371687   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:10.371711   498 net.cpp:200] Created Layer conv1a (3)
+I0512 11:23:10.371718   498 net.cpp:572] conv1a <- data/bias
+I0512 11:23:10.371726   498 net.cpp:542] conv1a -> conv1a
+I0512 11:23:11.283793   498 net.cpp:260] Setting up conv1a
+I0512 11:23:11.283818   498 net.cpp:267] TEST Top shape for layer 3 'conv1a' 10 32 160 384 (19660800)
+I0512 11:23:11.283843   498 layer_factory.hpp:172] Creating layer 'conv1a/bn' of type 'BatchNorm'
+I0512 11:23:11.283848   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.283864   498 net.cpp:200] Created Layer conv1a/bn (4)
+I0512 11:23:11.283869   498 net.cpp:572] conv1a/bn <- conv1a
+I0512 11:23:11.283875   498 net.cpp:527] conv1a/bn -> conv1a (in-place)
+I0512 11:23:11.284266   498 net.cpp:260] Setting up conv1a/bn
+I0512 11:23:11.284276   498 net.cpp:267] TEST Top shape for layer 4 'conv1a/bn' 10 32 160 384 (19660800)
+I0512 11:23:11.284291   498 layer_factory.hpp:172] Creating layer 'conv1a/relu' of type 'ReLU'
+I0512 11:23:11.284299   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.284308   498 net.cpp:200] Created Layer conv1a/relu (5)
+I0512 11:23:11.284317   498 net.cpp:572] conv1a/relu <- conv1a
+I0512 11:23:11.284322   498 net.cpp:527] conv1a/relu -> conv1a (in-place)
+I0512 11:23:11.284344   498 net.cpp:260] Setting up conv1a/relu
+I0512 11:23:11.284369   498 net.cpp:267] TEST Top shape for layer 5 'conv1a/relu' 10 32 160 384 (19660800)
+I0512 11:23:11.284377   498 layer_factory.hpp:172] Creating layer 'conv1b' of type 'Convolution'
+I0512 11:23:11.284384   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.284400   498 net.cpp:200] Created Layer conv1b (6)
+I0512 11:23:11.284407   498 net.cpp:572] conv1b <- conv1a
+I0512 11:23:11.284413   498 net.cpp:542] conv1b -> conv1b
+I0512 11:23:11.284821   498 net.cpp:260] Setting up conv1b
+I0512 11:23:11.284831   498 net.cpp:267] TEST Top shape for layer 6 'conv1b' 10 32 160 384 (19660800)
+I0512 11:23:11.284842   498 layer_factory.hpp:172] Creating layer 'conv1b/bn' of type 'BatchNorm'
+I0512 11:23:11.284847   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.284857   498 net.cpp:200] Created Layer conv1b/bn (7)
+I0512 11:23:11.284863   498 net.cpp:572] conv1b/bn <- conv1b
+I0512 11:23:11.284869   498 net.cpp:527] conv1b/bn -> conv1b (in-place)
+I0512 11:23:11.285177   498 net.cpp:260] Setting up conv1b/bn
+I0512 11:23:11.285184   498 net.cpp:267] TEST Top shape for layer 7 'conv1b/bn' 10 32 160 384 (19660800)
+I0512 11:23:11.285194   498 layer_factory.hpp:172] Creating layer 'conv1b/relu' of type 'ReLU'
+I0512 11:23:11.285200   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.285207   498 net.cpp:200] Created Layer conv1b/relu (8)
+I0512 11:23:11.285212   498 net.cpp:572] conv1b/relu <- conv1b
+I0512 11:23:11.285218   498 net.cpp:527] conv1b/relu -> conv1b (in-place)
+I0512 11:23:11.285225   498 net.cpp:260] Setting up conv1b/relu
+I0512 11:23:11.285231   498 net.cpp:267] TEST Top shape for layer 8 'conv1b/relu' 10 32 160 384 (19660800)
+I0512 11:23:11.285257   498 layer_factory.hpp:172] Creating layer 'pool1' of type 'Pooling'
+I0512 11:23:11.285264   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.285274   498 net.cpp:200] Created Layer pool1 (9)
+I0512 11:23:11.285279   498 net.cpp:572] pool1 <- conv1b
+I0512 11:23:11.285285   498 net.cpp:542] pool1 -> pool1
+I0512 11:23:11.285362   498 net.cpp:260] Setting up pool1
+I0512 11:23:11.285367   498 net.cpp:267] TEST Top shape for layer 9 'pool1' 10 32 80 192 (4915200)
+I0512 11:23:11.285374   498 layer_factory.hpp:172] Creating layer 'res2a_branch2a' of type 'Convolution'
+I0512 11:23:11.285378   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.285390   498 net.cpp:200] Created Layer res2a_branch2a (10)
+I0512 11:23:11.285398   498 net.cpp:572] res2a_branch2a <- pool1
+I0512 11:23:11.285403   498 net.cpp:542] res2a_branch2a -> res2a_branch2a
+I0512 11:23:11.286469   498 net.cpp:260] Setting up res2a_branch2a
+I0512 11:23:11.286479   498 net.cpp:267] TEST Top shape for layer 10 'res2a_branch2a' 10 64 80 192 (9830400)
+I0512 11:23:11.286491   498 layer_factory.hpp:172] Creating layer 'res2a_branch2a/bn' of type 'BatchNorm'
+I0512 11:23:11.286496   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.286506   498 net.cpp:200] Created Layer res2a_branch2a/bn (11)
+I0512 11:23:11.286514   498 net.cpp:572] res2a_branch2a/bn <- res2a_branch2a
+I0512 11:23:11.286520   498 net.cpp:527] res2a_branch2a/bn -> res2a_branch2a (in-place)
+I0512 11:23:11.286797   498 net.cpp:260] Setting up res2a_branch2a/bn
+I0512 11:23:11.286803   498 net.cpp:267] TEST Top shape for layer 11 'res2a_branch2a/bn' 10 64 80 192 (9830400)
+I0512 11:23:11.286813   498 layer_factory.hpp:172] Creating layer 'res2a_branch2a/relu' of type 'ReLU'
+I0512 11:23:11.286818   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.286825   498 net.cpp:200] Created Layer res2a_branch2a/relu (12)
+I0512 11:23:11.286832   498 net.cpp:572] res2a_branch2a/relu <- res2a_branch2a
+I0512 11:23:11.286839   498 net.cpp:527] res2a_branch2a/relu -> res2a_branch2a (in-place)
+I0512 11:23:11.286845   498 net.cpp:260] Setting up res2a_branch2a/relu
+I0512 11:23:11.286849   498 net.cpp:267] TEST Top shape for layer 12 'res2a_branch2a/relu' 10 64 80 192 (9830400)
+I0512 11:23:11.286856   498 layer_factory.hpp:172] Creating layer 'res2a_branch2b' of type 'Convolution'
+I0512 11:23:11.286864   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.286877   498 net.cpp:200] Created Layer res2a_branch2b (13)
+I0512 11:23:11.286886   498 net.cpp:572] res2a_branch2b <- res2a_branch2a
+I0512 11:23:11.286895   498 net.cpp:542] res2a_branch2b -> res2a_branch2b
+I0512 11:23:11.287192   498 net.cpp:260] Setting up res2a_branch2b
+I0512 11:23:11.287202   498 net.cpp:267] TEST Top shape for layer 13 'res2a_branch2b' 10 64 80 192 (9830400)
+I0512 11:23:11.287217   498 layer_factory.hpp:172] Creating layer 'res2a_branch2b/bn' of type 'BatchNorm'
+I0512 11:23:11.287225   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.287235   498 net.cpp:200] Created Layer res2a_branch2b/bn (14)
+I0512 11:23:11.287243   498 net.cpp:572] res2a_branch2b/bn <- res2a_branch2b
+I0512 11:23:11.287253   498 net.cpp:527] res2a_branch2b/bn -> res2a_branch2b (in-place)
+I0512 11:23:11.287555   498 net.cpp:260] Setting up res2a_branch2b/bn
+I0512 11:23:11.287565   498 net.cpp:267] TEST Top shape for layer 14 'res2a_branch2b/bn' 10 64 80 192 (9830400)
+I0512 11:23:11.287585   498 layer_factory.hpp:172] Creating layer 'res2a_branch2b/relu' of type 'ReLU'
+I0512 11:23:11.287592   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.287600   498 net.cpp:200] Created Layer res2a_branch2b/relu (15)
+I0512 11:23:11.287607   498 net.cpp:572] res2a_branch2b/relu <- res2a_branch2b
+I0512 11:23:11.287631   498 net.cpp:527] res2a_branch2b/relu -> res2a_branch2b (in-place)
+I0512 11:23:11.287642   498 net.cpp:260] Setting up res2a_branch2b/relu
+I0512 11:23:11.287649   498 net.cpp:267] TEST Top shape for layer 15 'res2a_branch2b/relu' 10 64 80 192 (9830400)
+I0512 11:23:11.287660   498 layer_factory.hpp:172] Creating layer 'pool2' of type 'Pooling'
+I0512 11:23:11.287667   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.287678   498 net.cpp:200] Created Layer pool2 (16)
+I0512 11:23:11.287689   498 net.cpp:572] pool2 <- res2a_branch2b
+I0512 11:23:11.287698   498 net.cpp:542] pool2 -> pool2
+I0512 11:23:11.287748   498 net.cpp:260] Setting up pool2
+I0512 11:23:11.287755   498 net.cpp:267] TEST Top shape for layer 16 'pool2' 10 64 40 96 (2457600)
+I0512 11:23:11.287761   498 layer_factory.hpp:172] Creating layer 'res3a_branch2a' of type 'Convolution'
+I0512 11:23:11.287765   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.287777   498 net.cpp:200] Created Layer res3a_branch2a (17)
+I0512 11:23:11.287783   498 net.cpp:572] res3a_branch2a <- pool2
+I0512 11:23:11.287788   498 net.cpp:542] res3a_branch2a -> res3a_branch2a
+I0512 11:23:11.288780   498 net.cpp:260] Setting up res3a_branch2a
+I0512 11:23:11.288789   498 net.cpp:267] TEST Top shape for layer 17 'res3a_branch2a' 10 128 40 96 (4915200)
+I0512 11:23:11.288800   498 layer_factory.hpp:172] Creating layer 'res3a_branch2a/bn' of type 'BatchNorm'
+I0512 11:23:11.288806   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.288816   498 net.cpp:200] Created Layer res3a_branch2a/bn (18)
+I0512 11:23:11.288823   498 net.cpp:572] res3a_branch2a/bn <- res3a_branch2a
+I0512 11:23:11.288830   498 net.cpp:527] res3a_branch2a/bn -> res3a_branch2a (in-place)
+I0512 11:23:11.289059   498 net.cpp:260] Setting up res3a_branch2a/bn
+I0512 11:23:11.289064   498 net.cpp:267] TEST Top shape for layer 18 'res3a_branch2a/bn' 10 128 40 96 (4915200)
+I0512 11:23:11.289077   498 layer_factory.hpp:172] Creating layer 'res3a_branch2a/relu' of type 'ReLU'
+I0512 11:23:11.289085   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.289091   498 net.cpp:200] Created Layer res3a_branch2a/relu (19)
+I0512 11:23:11.289098   498 net.cpp:572] res3a_branch2a/relu <- res3a_branch2a
+I0512 11:23:11.289104   498 net.cpp:527] res3a_branch2a/relu -> res3a_branch2a (in-place)
+I0512 11:23:11.289113   498 net.cpp:260] Setting up res3a_branch2a/relu
+I0512 11:23:11.289115   498 net.cpp:267] TEST Top shape for layer 19 'res3a_branch2a/relu' 10 128 40 96 (4915200)
+I0512 11:23:11.289122   498 layer_factory.hpp:172] Creating layer 'res3a_branch2b' of type 'Convolution'
+I0512 11:23:11.289130   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.289139   498 net.cpp:200] Created Layer res3a_branch2b (20)
+I0512 11:23:11.289145   498 net.cpp:572] res3a_branch2b <- res3a_branch2a
+I0512 11:23:11.289150   498 net.cpp:542] res3a_branch2b -> res3a_branch2b
+I0512 11:23:11.289723   498 net.cpp:260] Setting up res3a_branch2b
+I0512 11:23:11.289731   498 net.cpp:267] TEST Top shape for layer 20 'res3a_branch2b' 10 128 40 96 (4915200)
+I0512 11:23:11.289739   498 layer_factory.hpp:172] Creating layer 'res3a_branch2b/bn' of type 'BatchNorm'
+I0512 11:23:11.289743   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.289753   498 net.cpp:200] Created Layer res3a_branch2b/bn (21)
+I0512 11:23:11.289760   498 net.cpp:572] res3a_branch2b/bn <- res3a_branch2b
+I0512 11:23:11.289767   498 net.cpp:527] res3a_branch2b/bn -> res3a_branch2b (in-place)
+I0512 11:23:11.289994   498 net.cpp:260] Setting up res3a_branch2b/bn
+I0512 11:23:11.290000   498 net.cpp:267] TEST Top shape for layer 21 'res3a_branch2b/bn' 10 128 40 96 (4915200)
+I0512 11:23:11.290009   498 layer_factory.hpp:172] Creating layer 'res3a_branch2b/relu' of type 'ReLU'
+I0512 11:23:11.290026   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.290032   498 net.cpp:200] Created Layer res3a_branch2b/relu (22)
+I0512 11:23:11.290038   498 net.cpp:572] res3a_branch2b/relu <- res3a_branch2b
+I0512 11:23:11.290045   498 net.cpp:527] res3a_branch2b/relu -> res3a_branch2b (in-place)
+I0512 11:23:11.290051   498 net.cpp:260] Setting up res3a_branch2b/relu
+I0512 11:23:11.290057   498 net.cpp:267] TEST Top shape for layer 22 'res3a_branch2b/relu' 10 128 40 96 (4915200)
+I0512 11:23:11.290067   498 layer_factory.hpp:172] Creating layer 'res3a_branch2b_res3a_branch2b/relu_0_split' of type 'Split'
+I0512 11:23:11.290076   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.290082   498 net.cpp:200] Created Layer res3a_branch2b_res3a_branch2b/relu_0_split (23)
+I0512 11:23:11.290086   498 net.cpp:572] res3a_branch2b_res3a_branch2b/relu_0_split <- res3a_branch2b
+I0512 11:23:11.290091   498 net.cpp:542] res3a_branch2b_res3a_branch2b/relu_0_split -> res3a_branch2b_res3a_branch2b/relu_0_split_0
+I0512 11:23:11.290099   498 net.cpp:542] res3a_branch2b_res3a_branch2b/relu_0_split -> res3a_branch2b_res3a_branch2b/relu_0_split_1
+I0512 11:23:11.290133   498 net.cpp:260] Setting up res3a_branch2b_res3a_branch2b/relu_0_split
+I0512 11:23:11.290138   498 net.cpp:267] TEST Top shape for layer 23 'res3a_branch2b_res3a_branch2b/relu_0_split' 10 128 40 96 (4915200)
+I0512 11:23:11.290143   498 net.cpp:267] TEST Top shape for layer 23 'res3a_branch2b_res3a_branch2b/relu_0_split' 10 128 40 96 (4915200)
+I0512 11:23:11.290149   498 layer_factory.hpp:172] Creating layer 'pool3' of type 'Pooling'
+I0512 11:23:11.290154   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.290160   498 net.cpp:200] Created Layer pool3 (24)
+I0512 11:23:11.290189   498 net.cpp:572] pool3 <- res3a_branch2b_res3a_branch2b/relu_0_split_0
+I0512 11:23:11.290199   498 net.cpp:542] pool3 -> pool3
+I0512 11:23:11.290241   498 net.cpp:260] Setting up pool3
+I0512 11:23:11.290246   498 net.cpp:267] TEST Top shape for layer 24 'pool3' 10 128 20 48 (1228800)
+I0512 11:23:11.290253   498 layer_factory.hpp:172] Creating layer 'res4a_branch2a' of type 'Convolution'
+I0512 11:23:11.290258   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.290271   498 net.cpp:200] Created Layer res4a_branch2a (25)
+I0512 11:23:11.290279   498 net.cpp:572] res4a_branch2a <- pool3
+I0512 11:23:11.290285   498 net.cpp:542] res4a_branch2a -> res4a_branch2a
+I0512 11:23:11.294215   498 net.cpp:260] Setting up res4a_branch2a
+I0512 11:23:11.294226   498 net.cpp:267] TEST Top shape for layer 25 'res4a_branch2a' 10 256 20 48 (2457600)
+I0512 11:23:11.294239   498 layer_factory.hpp:172] Creating layer 'res4a_branch2a/bn' of type 'BatchNorm'
+I0512 11:23:11.294250   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.294258   498 net.cpp:200] Created Layer res4a_branch2a/bn (26)
+I0512 11:23:11.294266   498 net.cpp:572] res4a_branch2a/bn <- res4a_branch2a
+I0512 11:23:11.294272   498 net.cpp:527] res4a_branch2a/bn -> res4a_branch2a (in-place)
+I0512 11:23:11.294528   498 net.cpp:260] Setting up res4a_branch2a/bn
+I0512 11:23:11.294534   498 net.cpp:267] TEST Top shape for layer 26 'res4a_branch2a/bn' 10 256 20 48 (2457600)
+I0512 11:23:11.294544   498 layer_factory.hpp:172] Creating layer 'res4a_branch2a/relu' of type 'ReLU'
+I0512 11:23:11.294553   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.294560   498 net.cpp:200] Created Layer res4a_branch2a/relu (27)
+I0512 11:23:11.294569   498 net.cpp:572] res4a_branch2a/relu <- res4a_branch2a
+I0512 11:23:11.294574   498 net.cpp:527] res4a_branch2a/relu -> res4a_branch2a (in-place)
+I0512 11:23:11.294584   498 net.cpp:260] Setting up res4a_branch2a/relu
+I0512 11:23:11.294589   498 net.cpp:267] TEST Top shape for layer 27 'res4a_branch2a/relu' 10 256 20 48 (2457600)
+I0512 11:23:11.294611   498 layer_factory.hpp:172] Creating layer 'res4a_branch2b' of type 'Convolution'
+I0512 11:23:11.294620   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.294634   498 net.cpp:200] Created Layer res4a_branch2b (28)
+I0512 11:23:11.294641   498 net.cpp:572] res4a_branch2b <- res4a_branch2a
+I0512 11:23:11.294647   498 net.cpp:542] res4a_branch2b -> res4a_branch2b
+I0512 11:23:11.296396   498 net.cpp:260] Setting up res4a_branch2b
+I0512 11:23:11.296406   498 net.cpp:267] TEST Top shape for layer 28 'res4a_branch2b' 10 256 20 48 (2457600)
+I0512 11:23:11.296416   498 layer_factory.hpp:172] Creating layer 'res4a_branch2b/bn' of type 'BatchNorm'
+I0512 11:23:11.296422   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.296428   498 net.cpp:200] Created Layer res4a_branch2b/bn (29)
+I0512 11:23:11.296433   498 net.cpp:572] res4a_branch2b/bn <- res4a_branch2b
+I0512 11:23:11.296437   498 net.cpp:527] res4a_branch2b/bn -> res4a_branch2b (in-place)
+I0512 11:23:11.296696   498 net.cpp:260] Setting up res4a_branch2b/bn
+I0512 11:23:11.296703   498 net.cpp:267] TEST Top shape for layer 29 'res4a_branch2b/bn' 10 256 20 48 (2457600)
+I0512 11:23:11.296713   498 layer_factory.hpp:172] Creating layer 'res4a_branch2b/relu' of type 'ReLU'
+I0512 11:23:11.296721   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.296730   498 net.cpp:200] Created Layer res4a_branch2b/relu (30)
+I0512 11:23:11.296736   498 net.cpp:572] res4a_branch2b/relu <- res4a_branch2b
+I0512 11:23:11.296742   498 net.cpp:527] res4a_branch2b/relu -> res4a_branch2b (in-place)
+I0512 11:23:11.296751   498 net.cpp:260] Setting up res4a_branch2b/relu
+I0512 11:23:11.296757   498 net.cpp:267] TEST Top shape for layer 30 'res4a_branch2b/relu' 10 256 20 48 (2457600)
+I0512 11:23:11.296766   498 layer_factory.hpp:172] Creating layer 'pool4' of type 'Pooling'
+I0512 11:23:11.296772   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.296782   498 net.cpp:200] Created Layer pool4 (31)
+I0512 11:23:11.296788   498 net.cpp:572] pool4 <- res4a_branch2b
+I0512 11:23:11.296793   498 net.cpp:542] pool4 -> pool4
+I0512 11:23:11.296838   498 net.cpp:260] Setting up pool4
+I0512 11:23:11.296844   498 net.cpp:267] TEST Top shape for layer 31 'pool4' 10 256 10 24 (614400)
+I0512 11:23:11.296849   498 layer_factory.hpp:172] Creating layer 'res5a_branch2a' of type 'Convolution'
+I0512 11:23:11.296854   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.296866   498 net.cpp:200] Created Layer res5a_branch2a (32)
+I0512 11:23:11.296874   498 net.cpp:572] res5a_branch2a <- pool4
+I0512 11:23:11.296880   498 net.cpp:542] res5a_branch2a -> res5a_branch2a
+I0512 11:23:11.310767   498 net.cpp:260] Setting up res5a_branch2a
+I0512 11:23:11.310781   498 net.cpp:267] TEST Top shape for layer 32 'res5a_branch2a' 10 512 10 24 (1228800)
+I0512 11:23:11.310792   498 layer_factory.hpp:172] Creating layer 'res5a_branch2a/bn' of type 'BatchNorm'
+I0512 11:23:11.310796   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.310804   498 net.cpp:200] Created Layer res5a_branch2a/bn (33)
+I0512 11:23:11.310811   498 net.cpp:572] res5a_branch2a/bn <- res5a_branch2a
+I0512 11:23:11.310818   498 net.cpp:527] res5a_branch2a/bn -> res5a_branch2a (in-place)
+I0512 11:23:11.311094   498 net.cpp:260] Setting up res5a_branch2a/bn
+I0512 11:23:11.311100   498 net.cpp:267] TEST Top shape for layer 33 'res5a_branch2a/bn' 10 512 10 24 (1228800)
+I0512 11:23:11.311113   498 layer_factory.hpp:172] Creating layer 'res5a_branch2a/relu' of type 'ReLU'
+I0512 11:23:11.311120   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.311125   498 net.cpp:200] Created Layer res5a_branch2a/relu (34)
+I0512 11:23:11.311148   498 net.cpp:572] res5a_branch2a/relu <- res5a_branch2a
+I0512 11:23:11.311154   498 net.cpp:527] res5a_branch2a/relu -> res5a_branch2a (in-place)
+I0512 11:23:11.311164   498 net.cpp:260] Setting up res5a_branch2a/relu
+I0512 11:23:11.311169   498 net.cpp:267] TEST Top shape for layer 34 'res5a_branch2a/relu' 10 512 10 24 (1228800)
+I0512 11:23:11.311177   498 layer_factory.hpp:172] Creating layer 'res5a_branch2b' of type 'Convolution'
+I0512 11:23:11.311182   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.311195   498 net.cpp:200] Created Layer res5a_branch2b (35)
+I0512 11:23:11.311203   498 net.cpp:572] res5a_branch2b <- res5a_branch2a
+I0512 11:23:11.311206   498 net.cpp:542] res5a_branch2b -> res5a_branch2b
+I0512 11:23:11.318327   498 net.cpp:260] Setting up res5a_branch2b
+I0512 11:23:11.318339   498 net.cpp:267] TEST Top shape for layer 35 'res5a_branch2b' 10 512 10 24 (1228800)
+I0512 11:23:11.318356   498 layer_factory.hpp:172] Creating layer 'res5a_branch2b/bn' of type 'BatchNorm'
+I0512 11:23:11.318361   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.318369   498 net.cpp:200] Created Layer res5a_branch2b/bn (36)
+I0512 11:23:11.318377   498 net.cpp:572] res5a_branch2b/bn <- res5a_branch2b
+I0512 11:23:11.318382   498 net.cpp:527] res5a_branch2b/bn -> res5a_branch2b (in-place)
+I0512 11:23:11.318626   498 net.cpp:260] Setting up res5a_branch2b/bn
+I0512 11:23:11.318631   498 net.cpp:267] TEST Top shape for layer 36 'res5a_branch2b/bn' 10 512 10 24 (1228800)
+I0512 11:23:11.318641   498 layer_factory.hpp:172] Creating layer 'res5a_branch2b/relu' of type 'ReLU'
+I0512 11:23:11.318646   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.318652   498 net.cpp:200] Created Layer res5a_branch2b/relu (37)
+I0512 11:23:11.318656   498 net.cpp:572] res5a_branch2b/relu <- res5a_branch2b
+I0512 11:23:11.318660   498 net.cpp:527] res5a_branch2b/relu -> res5a_branch2b (in-place)
+I0512 11:23:11.318676   498 net.cpp:260] Setting up res5a_branch2b/relu
+I0512 11:23:11.318681   498 net.cpp:267] TEST Top shape for layer 37 'res5a_branch2b/relu' 10 512 10 24 (1228800)
+I0512 11:23:11.318691   498 layer_factory.hpp:172] Creating layer 'res5a_branch2b_res5a_branch2b/relu_0_split' of type 'Split'
+I0512 11:23:11.318698   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.318706   498 net.cpp:200] Created Layer res5a_branch2b_res5a_branch2b/relu_0_split (38)
+I0512 11:23:11.318712   498 net.cpp:572] res5a_branch2b_res5a_branch2b/relu_0_split <- res5a_branch2b
+I0512 11:23:11.318717   498 net.cpp:542] res5a_branch2b_res5a_branch2b/relu_0_split -> res5a_branch2b_res5a_branch2b/relu_0_split_0
+I0512 11:23:11.318727   498 net.cpp:542] res5a_branch2b_res5a_branch2b/relu_0_split -> res5a_branch2b_res5a_branch2b/relu_0_split_1
+I0512 11:23:11.318763   498 net.cpp:260] Setting up res5a_branch2b_res5a_branch2b/relu_0_split
+I0512 11:23:11.318768   498 net.cpp:267] TEST Top shape for layer 38 'res5a_branch2b_res5a_branch2b/relu_0_split' 10 512 10 24 (1228800)
+I0512 11:23:11.318773   498 net.cpp:267] TEST Top shape for layer 38 'res5a_branch2b_res5a_branch2b/relu_0_split' 10 512 10 24 (1228800)
+I0512 11:23:11.318781   498 layer_factory.hpp:172] Creating layer 'pool6' of type 'Pooling'
+I0512 11:23:11.318789   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.318796   498 net.cpp:200] Created Layer pool6 (39)
+I0512 11:23:11.318804   498 net.cpp:572] pool6 <- res5a_branch2b_res5a_branch2b/relu_0_split_0
+I0512 11:23:11.318809   498 net.cpp:542] pool6 -> pool6
+I0512 11:23:11.318856   498 net.cpp:260] Setting up pool6
+I0512 11:23:11.318862   498 net.cpp:267] TEST Top shape for layer 39 'pool6' 10 512 5 12 (307200)
+I0512 11:23:11.318868   498 layer_factory.hpp:172] Creating layer 'pool6_pool6_0_split' of type 'Split'
+I0512 11:23:11.318874   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.318895   498 net.cpp:200] Created Layer pool6_pool6_0_split (40)
+I0512 11:23:11.318899   498 net.cpp:572] pool6_pool6_0_split <- pool6
+I0512 11:23:11.318904   498 net.cpp:542] pool6_pool6_0_split -> pool6_pool6_0_split_0
+I0512 11:23:11.318912   498 net.cpp:542] pool6_pool6_0_split -> pool6_pool6_0_split_1
+I0512 11:23:11.318941   498 net.cpp:260] Setting up pool6_pool6_0_split
+I0512 11:23:11.318946   498 net.cpp:267] TEST Top shape for layer 40 'pool6_pool6_0_split' 10 512 5 12 (307200)
+I0512 11:23:11.318953   498 net.cpp:267] TEST Top shape for layer 40 'pool6_pool6_0_split' 10 512 5 12 (307200)
+I0512 11:23:11.318958   498 layer_factory.hpp:172] Creating layer 'pool7' of type 'Pooling'
+I0512 11:23:11.318964   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.318972   498 net.cpp:200] Created Layer pool7 (41)
+I0512 11:23:11.318980   498 net.cpp:572] pool7 <- pool6_pool6_0_split_0
+I0512 11:23:11.318986   498 net.cpp:542] pool7 -> pool7
+I0512 11:23:11.319023   498 net.cpp:260] Setting up pool7
+I0512 11:23:11.319028   498 net.cpp:267] TEST Top shape for layer 41 'pool7' 10 512 3 6 (92160)
+I0512 11:23:11.319034   498 layer_factory.hpp:172] Creating layer 'pool7_pool7_0_split' of type 'Split'
+I0512 11:23:11.319038   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.319046   498 net.cpp:200] Created Layer pool7_pool7_0_split (42)
+I0512 11:23:11.319051   498 net.cpp:572] pool7_pool7_0_split <- pool7
+I0512 11:23:11.319057   498 net.cpp:542] pool7_pool7_0_split -> pool7_pool7_0_split_0
+I0512 11:23:11.319068   498 net.cpp:542] pool7_pool7_0_split -> pool7_pool7_0_split_1
+I0512 11:23:11.319101   498 net.cpp:260] Setting up pool7_pool7_0_split
+I0512 11:23:11.319108   498 net.cpp:267] TEST Top shape for layer 42 'pool7_pool7_0_split' 10 512 3 6 (92160)
+I0512 11:23:11.319118   498 net.cpp:267] TEST Top shape for layer 42 'pool7_pool7_0_split' 10 512 3 6 (92160)
+I0512 11:23:11.319124   498 layer_factory.hpp:172] Creating layer 'pool8' of type 'Pooling'
+I0512 11:23:11.319128   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.319134   498 net.cpp:200] Created Layer pool8 (43)
+I0512 11:23:11.319141   498 net.cpp:572] pool8 <- pool7_pool7_0_split_0
+I0512 11:23:11.319146   498 net.cpp:542] pool8 -> pool8
+I0512 11:23:11.319190   498 net.cpp:260] Setting up pool8
+I0512 11:23:11.319196   498 net.cpp:267] TEST Top shape for layer 43 'pool8' 10 512 2 3 (30720)
+I0512 11:23:11.319202   498 layer_factory.hpp:172] Creating layer 'pool8_pool8_0_split' of type 'Split'
+I0512 11:23:11.319206   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.319211   498 net.cpp:200] Created Layer pool8_pool8_0_split (44)
+I0512 11:23:11.319217   498 net.cpp:572] pool8_pool8_0_split <- pool8
+I0512 11:23:11.319223   498 net.cpp:542] pool8_pool8_0_split -> pool8_pool8_0_split_0
+I0512 11:23:11.319232   498 net.cpp:542] pool8_pool8_0_split -> pool8_pool8_0_split_1
+I0512 11:23:11.319258   498 net.cpp:260] Setting up pool8_pool8_0_split
+I0512 11:23:11.319265   498 net.cpp:267] TEST Top shape for layer 44 'pool8_pool8_0_split' 10 512 2 3 (30720)
+I0512 11:23:11.319272   498 net.cpp:267] TEST Top shape for layer 44 'pool8_pool8_0_split' 10 512 2 3 (30720)
+I0512 11:23:11.319280   498 layer_factory.hpp:172] Creating layer 'pool9' of type 'Pooling'
+I0512 11:23:11.319284   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.319293   498 net.cpp:200] Created Layer pool9 (45)
+I0512 11:23:11.319299   498 net.cpp:572] pool9 <- pool8_pool8_0_split_0
+I0512 11:23:11.319305   498 net.cpp:542] pool9 -> pool9
+I0512 11:23:11.319353   498 net.cpp:260] Setting up pool9
+I0512 11:23:11.319361   498 net.cpp:267] TEST Top shape for layer 45 'pool9' 10 512 1 2 (10240)
+I0512 11:23:11.319371   498 layer_factory.hpp:172] Creating layer 'ctx_output1' of type 'Convolution'
+I0512 11:23:11.319387   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.319402   498 net.cpp:200] Created Layer ctx_output1 (46)
+I0512 11:23:11.319408   498 net.cpp:572] ctx_output1 <- res3a_branch2b_res3a_branch2b/relu_0_split_1
+I0512 11:23:11.319413   498 net.cpp:542] ctx_output1 -> ctx_output1
+I0512 11:23:11.319965   498 net.cpp:260] Setting up ctx_output1
+I0512 11:23:11.319972   498 net.cpp:267] TEST Top shape for layer 46 'ctx_output1' 10 256 40 96 (9830400)
+I0512 11:23:11.319981   498 layer_factory.hpp:172] Creating layer 'ctx_output1/relu' of type 'ReLU'
+I0512 11:23:11.319985   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.319990   498 net.cpp:200] Created Layer ctx_output1/relu (47)
+I0512 11:23:11.319995   498 net.cpp:572] ctx_output1/relu <- ctx_output1
+I0512 11:23:11.319999   498 net.cpp:527] ctx_output1/relu -> ctx_output1 (in-place)
+I0512 11:23:11.320008   498 net.cpp:260] Setting up ctx_output1/relu
+I0512 11:23:11.320011   498 net.cpp:267] TEST Top shape for layer 47 'ctx_output1/relu' 10 256 40 96 (9830400)
+I0512 11:23:11.320016   498 layer_factory.hpp:172] Creating layer 'ctx_output1_ctx_output1/relu_0_split' of type 'Split'
+I0512 11:23:11.320020   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.320026   498 net.cpp:200] Created Layer ctx_output1_ctx_output1/relu_0_split (48)
+I0512 11:23:11.320031   498 net.cpp:572] ctx_output1_ctx_output1/relu_0_split <- ctx_output1
+I0512 11:23:11.320035   498 net.cpp:542] ctx_output1_ctx_output1/relu_0_split -> ctx_output1_ctx_output1/relu_0_split_0
+I0512 11:23:11.320040   498 net.cpp:542] ctx_output1_ctx_output1/relu_0_split -> ctx_output1_ctx_output1/relu_0_split_1
+I0512 11:23:11.320045   498 net.cpp:542] ctx_output1_ctx_output1/relu_0_split -> ctx_output1_ctx_output1/relu_0_split_2
+I0512 11:23:11.320076   498 net.cpp:260] Setting up ctx_output1_ctx_output1/relu_0_split
+I0512 11:23:11.320080   498 net.cpp:267] TEST Top shape for layer 48 'ctx_output1_ctx_output1/relu_0_split' 10 256 40 96 (9830400)
+I0512 11:23:11.320086   498 net.cpp:267] TEST Top shape for layer 48 'ctx_output1_ctx_output1/relu_0_split' 10 256 40 96 (9830400)
+I0512 11:23:11.320091   498 net.cpp:267] TEST Top shape for layer 48 'ctx_output1_ctx_output1/relu_0_split' 10 256 40 96 (9830400)
+I0512 11:23:11.320098   498 layer_factory.hpp:172] Creating layer 'ctx_output2' of type 'Convolution'
+I0512 11:23:11.320102   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.320111   498 net.cpp:200] Created Layer ctx_output2 (49)
+I0512 11:23:11.320116   498 net.cpp:572] ctx_output2 <- res5a_branch2b_res5a_branch2b/relu_0_split_1
+I0512 11:23:11.320120   498 net.cpp:542] ctx_output2 -> ctx_output2
+I0512 11:23:11.321692   498 net.cpp:260] Setting up ctx_output2
+I0512 11:23:11.321702   498 net.cpp:267] TEST Top shape for layer 49 'ctx_output2' 10 256 10 24 (614400)
+I0512 11:23:11.321710   498 layer_factory.hpp:172] Creating layer 'ctx_output2/relu' of type 'ReLU'
+I0512 11:23:11.321715   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.321722   498 net.cpp:200] Created Layer ctx_output2/relu (50)
+I0512 11:23:11.321727   498 net.cpp:572] ctx_output2/relu <- ctx_output2
+I0512 11:23:11.321734   498 net.cpp:527] ctx_output2/relu -> ctx_output2 (in-place)
+I0512 11:23:11.321743   498 net.cpp:260] Setting up ctx_output2/relu
+I0512 11:23:11.321771   498 net.cpp:267] TEST Top shape for layer 50 'ctx_output2/relu' 10 256 10 24 (614400)
+I0512 11:23:11.321784   498 layer_factory.hpp:172] Creating layer 'ctx_output2_ctx_output2/relu_0_split' of type 'Split'
+I0512 11:23:11.321789   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.321797   498 net.cpp:200] Created Layer ctx_output2_ctx_output2/relu_0_split (51)
+I0512 11:23:11.321806   498 net.cpp:572] ctx_output2_ctx_output2/relu_0_split <- ctx_output2
+I0512 11:23:11.321825   498 net.cpp:542] ctx_output2_ctx_output2/relu_0_split -> ctx_output2_ctx_output2/relu_0_split_0
+I0512 11:23:11.321835   498 net.cpp:542] ctx_output2_ctx_output2/relu_0_split -> ctx_output2_ctx_output2/relu_0_split_1
+I0512 11:23:11.321842   498 net.cpp:542] ctx_output2_ctx_output2/relu_0_split -> ctx_output2_ctx_output2/relu_0_split_2
+I0512 11:23:11.321894   498 net.cpp:260] Setting up ctx_output2_ctx_output2/relu_0_split
+I0512 11:23:11.321902   498 net.cpp:267] TEST Top shape for layer 51 'ctx_output2_ctx_output2/relu_0_split' 10 256 10 24 (614400)
+I0512 11:23:11.321908   498 net.cpp:267] TEST Top shape for layer 51 'ctx_output2_ctx_output2/relu_0_split' 10 256 10 24 (614400)
+I0512 11:23:11.321913   498 net.cpp:267] TEST Top shape for layer 51 'ctx_output2_ctx_output2/relu_0_split' 10 256 10 24 (614400)
+I0512 11:23:11.321920   498 layer_factory.hpp:172] Creating layer 'ctx_output3' of type 'Convolution'
+I0512 11:23:11.321924   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.321936   498 net.cpp:200] Created Layer ctx_output3 (52)
+I0512 11:23:11.321944   498 net.cpp:572] ctx_output3 <- pool6_pool6_0_split_1
+I0512 11:23:11.321954   498 net.cpp:542] ctx_output3 -> ctx_output3
+I0512 11:23:11.324205   498 net.cpp:260] Setting up ctx_output3
+I0512 11:23:11.324216   498 net.cpp:267] TEST Top shape for layer 52 'ctx_output3' 10 256 5 12 (153600)
+I0512 11:23:11.324229   498 layer_factory.hpp:172] Creating layer 'ctx_output3/relu' of type 'ReLU'
+I0512 11:23:11.324234   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.324239   498 net.cpp:200] Created Layer ctx_output3/relu (53)
+I0512 11:23:11.324244   498 net.cpp:572] ctx_output3/relu <- ctx_output3
+I0512 11:23:11.324251   498 net.cpp:527] ctx_output3/relu -> ctx_output3 (in-place)
+I0512 11:23:11.324259   498 net.cpp:260] Setting up ctx_output3/relu
+I0512 11:23:11.324270   498 net.cpp:267] TEST Top shape for layer 53 'ctx_output3/relu' 10 256 5 12 (153600)
+I0512 11:23:11.324280   498 layer_factory.hpp:172] Creating layer 'ctx_output3_ctx_output3/relu_0_split' of type 'Split'
+I0512 11:23:11.324286   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.324297   498 net.cpp:200] Created Layer ctx_output3_ctx_output3/relu_0_split (54)
+I0512 11:23:11.324322   498 net.cpp:572] ctx_output3_ctx_output3/relu_0_split <- ctx_output3
+I0512 11:23:11.324331   498 net.cpp:542] ctx_output3_ctx_output3/relu_0_split -> ctx_output3_ctx_output3/relu_0_split_0
+I0512 11:23:11.324337   498 net.cpp:542] ctx_output3_ctx_output3/relu_0_split -> ctx_output3_ctx_output3/relu_0_split_1
+I0512 11:23:11.324342   498 net.cpp:542] ctx_output3_ctx_output3/relu_0_split -> ctx_output3_ctx_output3/relu_0_split_2
+I0512 11:23:11.324396   498 net.cpp:260] Setting up ctx_output3_ctx_output3/relu_0_split
+I0512 11:23:11.324404   498 net.cpp:267] TEST Top shape for layer 54 'ctx_output3_ctx_output3/relu_0_split' 10 256 5 12 (153600)
+I0512 11:23:11.324411   498 net.cpp:267] TEST Top shape for layer 54 'ctx_output3_ctx_output3/relu_0_split' 10 256 5 12 (153600)
+I0512 11:23:11.324415   498 net.cpp:267] TEST Top shape for layer 54 'ctx_output3_ctx_output3/relu_0_split' 10 256 5 12 (153600)
+I0512 11:23:11.324421   498 layer_factory.hpp:172] Creating layer 'ctx_output4' of type 'Convolution'
+I0512 11:23:11.324425   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.324438   498 net.cpp:200] Created Layer ctx_output4 (55)
+I0512 11:23:11.324462   498 net.cpp:572] ctx_output4 <- pool7_pool7_0_split_1
+I0512 11:23:11.324470   498 net.cpp:542] ctx_output4 -> ctx_output4
+I0512 11:23:11.326054   498 net.cpp:260] Setting up ctx_output4
+I0512 11:23:11.326063   498 net.cpp:267] TEST Top shape for layer 55 'ctx_output4' 10 256 3 6 (46080)
+I0512 11:23:11.326073   498 layer_factory.hpp:172] Creating layer 'ctx_output4/relu' of type 'ReLU'
+I0512 11:23:11.326088   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.326097   498 net.cpp:200] Created Layer ctx_output4/relu (56)
+I0512 11:23:11.326104   498 net.cpp:572] ctx_output4/relu <- ctx_output4
+I0512 11:23:11.326109   498 net.cpp:527] ctx_output4/relu -> ctx_output4 (in-place)
+I0512 11:23:11.326115   498 net.cpp:260] Setting up ctx_output4/relu
+I0512 11:23:11.326118   498 net.cpp:267] TEST Top shape for layer 56 'ctx_output4/relu' 10 256 3 6 (46080)
+I0512 11:23:11.326125   498 layer_factory.hpp:172] Creating layer 'ctx_output4_ctx_output4/relu_0_split' of type 'Split'
+I0512 11:23:11.326133   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.326141   498 net.cpp:200] Created Layer ctx_output4_ctx_output4/relu_0_split (57)
+I0512 11:23:11.326148   498 net.cpp:572] ctx_output4_ctx_output4/relu_0_split <- ctx_output4
+I0512 11:23:11.326153   498 net.cpp:542] ctx_output4_ctx_output4/relu_0_split -> ctx_output4_ctx_output4/relu_0_split_0
+I0512 11:23:11.326159   498 net.cpp:542] ctx_output4_ctx_output4/relu_0_split -> ctx_output4_ctx_output4/relu_0_split_1
+I0512 11:23:11.326165   498 net.cpp:542] ctx_output4_ctx_output4/relu_0_split -> ctx_output4_ctx_output4/relu_0_split_2
+I0512 11:23:11.326206   498 net.cpp:260] Setting up ctx_output4_ctx_output4/relu_0_split
+I0512 11:23:11.326211   498 net.cpp:267] TEST Top shape for layer 57 'ctx_output4_ctx_output4/relu_0_split' 10 256 3 6 (46080)
+I0512 11:23:11.326216   498 net.cpp:267] TEST Top shape for layer 57 'ctx_output4_ctx_output4/relu_0_split' 10 256 3 6 (46080)
+I0512 11:23:11.326221   498 net.cpp:267] TEST Top shape for layer 57 'ctx_output4_ctx_output4/relu_0_split' 10 256 3 6 (46080)
+I0512 11:23:11.326226   498 layer_factory.hpp:172] Creating layer 'ctx_output5' of type 'Convolution'
+I0512 11:23:11.326231   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.326239   498 net.cpp:200] Created Layer ctx_output5 (58)
+I0512 11:23:11.326246   498 net.cpp:572] ctx_output5 <- pool8_pool8_0_split_1
+I0512 11:23:11.326251   498 net.cpp:542] ctx_output5 -> ctx_output5
+I0512 11:23:11.327823   498 net.cpp:260] Setting up ctx_output5
+I0512 11:23:11.327832   498 net.cpp:267] TEST Top shape for layer 58 'ctx_output5' 10 256 2 3 (15360)
+I0512 11:23:11.327842   498 layer_factory.hpp:172] Creating layer 'ctx_output5/relu' of type 'ReLU'
+I0512 11:23:11.327847   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.327853   498 net.cpp:200] Created Layer ctx_output5/relu (59)
+I0512 11:23:11.327858   498 net.cpp:572] ctx_output5/relu <- ctx_output5
+I0512 11:23:11.327867   498 net.cpp:527] ctx_output5/relu -> ctx_output5 (in-place)
+I0512 11:23:11.327877   498 net.cpp:260] Setting up ctx_output5/relu
+I0512 11:23:11.327880   498 net.cpp:267] TEST Top shape for layer 59 'ctx_output5/relu' 10 256 2 3 (15360)
+I0512 11:23:11.327890   498 layer_factory.hpp:172] Creating layer 'ctx_output5_ctx_output5/relu_0_split' of type 'Split'
+I0512 11:23:11.327895   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.327905   498 net.cpp:200] Created Layer ctx_output5_ctx_output5/relu_0_split (60)
+I0512 11:23:11.327911   498 net.cpp:572] ctx_output5_ctx_output5/relu_0_split <- ctx_output5
+I0512 11:23:11.327917   498 net.cpp:542] ctx_output5_ctx_output5/relu_0_split -> ctx_output5_ctx_output5/relu_0_split_0
+I0512 11:23:11.327925   498 net.cpp:542] ctx_output5_ctx_output5/relu_0_split -> ctx_output5_ctx_output5/relu_0_split_1
+I0512 11:23:11.327932   498 net.cpp:542] ctx_output5_ctx_output5/relu_0_split -> ctx_output5_ctx_output5/relu_0_split_2
+I0512 11:23:11.327976   498 net.cpp:260] Setting up ctx_output5_ctx_output5/relu_0_split
+I0512 11:23:11.327982   498 net.cpp:267] TEST Top shape for layer 60 'ctx_output5_ctx_output5/relu_0_split' 10 256 2 3 (15360)
+I0512 11:23:11.327987   498 net.cpp:267] TEST Top shape for layer 60 'ctx_output5_ctx_output5/relu_0_split' 10 256 2 3 (15360)
+I0512 11:23:11.328006   498 net.cpp:267] TEST Top shape for layer 60 'ctx_output5_ctx_output5/relu_0_split' 10 256 2 3 (15360)
+I0512 11:23:11.328014   498 layer_factory.hpp:172] Creating layer 'ctx_output6' of type 'Convolution'
+I0512 11:23:11.328018   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.328028   498 net.cpp:200] Created Layer ctx_output6 (61)
+I0512 11:23:11.328035   498 net.cpp:572] ctx_output6 <- pool9
+I0512 11:23:11.328042   498 net.cpp:542] ctx_output6 -> ctx_output6
+I0512 11:23:11.329627   498 net.cpp:260] Setting up ctx_output6
+I0512 11:23:11.329635   498 net.cpp:267] TEST Top shape for layer 61 'ctx_output6' 10 256 1 2 (5120)
+I0512 11:23:11.329644   498 layer_factory.hpp:172] Creating layer 'ctx_output6/relu' of type 'ReLU'
+I0512 11:23:11.329651   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.329658   498 net.cpp:200] Created Layer ctx_output6/relu (62)
+I0512 11:23:11.329664   498 net.cpp:572] ctx_output6/relu <- ctx_output6
+I0512 11:23:11.329672   498 net.cpp:527] ctx_output6/relu -> ctx_output6 (in-place)
+I0512 11:23:11.329680   498 net.cpp:260] Setting up ctx_output6/relu
+I0512 11:23:11.329686   498 net.cpp:267] TEST Top shape for layer 62 'ctx_output6/relu' 10 256 1 2 (5120)
+I0512 11:23:11.329697   498 layer_factory.hpp:172] Creating layer 'ctx_output6_ctx_output6/relu_0_split' of type 'Split'
+I0512 11:23:11.329704   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.329711   498 net.cpp:200] Created Layer ctx_output6_ctx_output6/relu_0_split (63)
+I0512 11:23:11.329716   498 net.cpp:572] ctx_output6_ctx_output6/relu_0_split <- ctx_output6
+I0512 11:23:11.329721   498 net.cpp:542] ctx_output6_ctx_output6/relu_0_split -> ctx_output6_ctx_output6/relu_0_split_0
+I0512 11:23:11.329726   498 net.cpp:542] ctx_output6_ctx_output6/relu_0_split -> ctx_output6_ctx_output6/relu_0_split_1
+I0512 11:23:11.329732   498 net.cpp:542] ctx_output6_ctx_output6/relu_0_split -> ctx_output6_ctx_output6/relu_0_split_2
+I0512 11:23:11.329773   498 net.cpp:260] Setting up ctx_output6_ctx_output6/relu_0_split
+I0512 11:23:11.329777   498 net.cpp:267] TEST Top shape for layer 63 'ctx_output6_ctx_output6/relu_0_split' 10 256 1 2 (5120)
+I0512 11:23:11.329783   498 net.cpp:267] TEST Top shape for layer 63 'ctx_output6_ctx_output6/relu_0_split' 10 256 1 2 (5120)
+I0512 11:23:11.329788   498 net.cpp:267] TEST Top shape for layer 63 'ctx_output6_ctx_output6/relu_0_split' 10 256 1 2 (5120)
+I0512 11:23:11.329795   498 layer_factory.hpp:172] Creating layer 'ctx_output1/relu_mbox_loc' of type 'Convolution'
+I0512 11:23:11.329799   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.329818   498 net.cpp:200] Created Layer ctx_output1/relu_mbox_loc (64)
+I0512 11:23:11.329823   498 net.cpp:572] ctx_output1/relu_mbox_loc <- ctx_output1_ctx_output1/relu_0_split_0
+I0512 11:23:11.329828   498 net.cpp:542] ctx_output1/relu_mbox_loc -> ctx_output1/relu_mbox_loc
+I0512 11:23:11.330063   498 net.cpp:260] Setting up ctx_output1/relu_mbox_loc
+I0512 11:23:11.330070   498 net.cpp:267] TEST Top shape for layer 64 'ctx_output1/relu_mbox_loc' 10 16 40 96 (614400)
+I0512 11:23:11.330078   498 layer_factory.hpp:172] Creating layer 'ctx_output1/relu_mbox_loc_perm' of type 'Permute'
+I0512 11:23:11.330083   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.330096   498 net.cpp:200] Created Layer ctx_output1/relu_mbox_loc_perm (65)
+I0512 11:23:11.330121   498 net.cpp:572] ctx_output1/relu_mbox_loc_perm <- ctx_output1/relu_mbox_loc
+I0512 11:23:11.330132   498 net.cpp:542] ctx_output1/relu_mbox_loc_perm -> ctx_output1/relu_mbox_loc_perm
+I0512 11:23:11.330225   498 net.cpp:260] Setting up ctx_output1/relu_mbox_loc_perm
+I0512 11:23:11.330231   498 net.cpp:267] TEST Top shape for layer 65 'ctx_output1/relu_mbox_loc_perm' 10 40 96 16 (614400)
+I0512 11:23:11.330250   498 layer_factory.hpp:172] Creating layer 'ctx_output1/relu_mbox_loc_flat' of type 'Flatten'
+I0512 11:23:11.330256   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.330268   498 net.cpp:200] Created Layer ctx_output1/relu_mbox_loc_flat (66)
+I0512 11:23:11.330276   498 net.cpp:572] ctx_output1/relu_mbox_loc_flat <- ctx_output1/relu_mbox_loc_perm
+I0512 11:23:11.330281   498 net.cpp:542] ctx_output1/relu_mbox_loc_flat -> ctx_output1/relu_mbox_loc_flat
+I0512 11:23:11.332309   498 net.cpp:260] Setting up ctx_output1/relu_mbox_loc_flat
+I0512 11:23:11.332321   498 net.cpp:267] TEST Top shape for layer 66 'ctx_output1/relu_mbox_loc_flat' 10 61440 (614400)
+I0512 11:23:11.332331   498 layer_factory.hpp:172] Creating layer 'ctx_output1/relu_mbox_conf' of type 'Convolution'
+I0512 11:23:11.332337   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.332350   498 net.cpp:200] Created Layer ctx_output1/relu_mbox_conf (67)
+I0512 11:23:11.332356   498 net.cpp:572] ctx_output1/relu_mbox_conf <- ctx_output1_ctx_output1/relu_0_split_1
+I0512 11:23:11.332363   498 net.cpp:542] ctx_output1/relu_mbox_conf -> ctx_output1/relu_mbox_conf
+I0512 11:23:11.332644   498 net.cpp:260] Setting up ctx_output1/relu_mbox_conf
+I0512 11:23:11.332650   498 net.cpp:267] TEST Top shape for layer 67 'ctx_output1/relu_mbox_conf' 10 16 40 96 (614400)
+I0512 11:23:11.332661   498 layer_factory.hpp:172] Creating layer 'ctx_output1/relu_mbox_conf_perm' of type 'Permute'
+I0512 11:23:11.332667   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.332674   498 net.cpp:200] Created Layer ctx_output1/relu_mbox_conf_perm (68)
+I0512 11:23:11.332681   498 net.cpp:572] ctx_output1/relu_mbox_conf_perm <- ctx_output1/relu_mbox_conf
+I0512 11:23:11.332689   498 net.cpp:542] ctx_output1/relu_mbox_conf_perm -> ctx_output1/relu_mbox_conf_perm
+I0512 11:23:11.332770   498 net.cpp:260] Setting up ctx_output1/relu_mbox_conf_perm
+I0512 11:23:11.332777   498 net.cpp:267] TEST Top shape for layer 68 'ctx_output1/relu_mbox_conf_perm' 10 40 96 16 (614400)
+I0512 11:23:11.332782   498 layer_factory.hpp:172] Creating layer 'ctx_output1/relu_mbox_conf_flat' of type 'Flatten'
+I0512 11:23:11.332787   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.332793   498 net.cpp:200] Created Layer ctx_output1/relu_mbox_conf_flat (69)
+I0512 11:23:11.332798   498 net.cpp:572] ctx_output1/relu_mbox_conf_flat <- ctx_output1/relu_mbox_conf_perm
+I0512 11:23:11.332803   498 net.cpp:542] ctx_output1/relu_mbox_conf_flat -> ctx_output1/relu_mbox_conf_flat
+I0512 11:23:11.334738   498 net.cpp:260] Setting up ctx_output1/relu_mbox_conf_flat
+I0512 11:23:11.334749   498 net.cpp:267] TEST Top shape for layer 69 'ctx_output1/relu_mbox_conf_flat' 10 61440 (614400)
+I0512 11:23:11.334759   498 layer_factory.hpp:172] Creating layer 'ctx_output1/relu_mbox_priorbox' of type 'PriorBox'
+I0512 11:23:11.334765   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.334780   498 net.cpp:200] Created Layer ctx_output1/relu_mbox_priorbox (70)
+I0512 11:23:11.334786   498 net.cpp:572] ctx_output1/relu_mbox_priorbox <- ctx_output1_ctx_output1/relu_0_split_2
+I0512 11:23:11.334794   498 net.cpp:572] ctx_output1/relu_mbox_priorbox <- data_data_0_split_1
+I0512 11:23:11.334803   498 net.cpp:542] ctx_output1/relu_mbox_priorbox -> ctx_output1/relu_mbox_priorbox
+I0512 11:23:11.334847   498 net.cpp:260] Setting up ctx_output1/relu_mbox_priorbox
+I0512 11:23:11.334853   498 net.cpp:267] TEST Top shape for layer 70 'ctx_output1/relu_mbox_priorbox' 1 2 61440 (122880)
+I0512 11:23:11.334861   498 layer_factory.hpp:172] Creating layer 'ctx_output2/relu_mbox_loc' of type 'Convolution'
+I0512 11:23:11.334866   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.334877   498 net.cpp:200] Created Layer ctx_output2/relu_mbox_loc (71)
+I0512 11:23:11.334895   498 net.cpp:572] ctx_output2/relu_mbox_loc <- ctx_output2_ctx_output2/relu_0_split_0
+I0512 11:23:11.334900   498 net.cpp:542] ctx_output2/relu_mbox_loc -> ctx_output2/relu_mbox_loc
+I0512 11:23:11.335187   498 net.cpp:260] Setting up ctx_output2/relu_mbox_loc
+I0512 11:23:11.335193   498 net.cpp:267] TEST Top shape for layer 71 'ctx_output2/relu_mbox_loc' 10 24 10 24 (57600)
+I0512 11:23:11.335202   498 layer_factory.hpp:172] Creating layer 'ctx_output2/relu_mbox_loc_perm' of type 'Permute'
+I0512 11:23:11.335207   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.335214   498 net.cpp:200] Created Layer ctx_output2/relu_mbox_loc_perm (72)
+I0512 11:23:11.335219   498 net.cpp:572] ctx_output2/relu_mbox_loc_perm <- ctx_output2/relu_mbox_loc
+I0512 11:23:11.335224   498 net.cpp:542] ctx_output2/relu_mbox_loc_perm -> ctx_output2/relu_mbox_loc_perm
+I0512 11:23:11.335299   498 net.cpp:260] Setting up ctx_output2/relu_mbox_loc_perm
+I0512 11:23:11.335304   498 net.cpp:267] TEST Top shape for layer 72 'ctx_output2/relu_mbox_loc_perm' 10 10 24 24 (57600)
+I0512 11:23:11.335312   498 layer_factory.hpp:172] Creating layer 'ctx_output2/relu_mbox_loc_flat' of type 'Flatten'
+I0512 11:23:11.335317   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.335325   498 net.cpp:200] Created Layer ctx_output2/relu_mbox_loc_flat (73)
+I0512 11:23:11.335330   498 net.cpp:572] ctx_output2/relu_mbox_loc_flat <- ctx_output2/relu_mbox_loc_perm
+I0512 11:23:11.335335   498 net.cpp:542] ctx_output2/relu_mbox_loc_flat -> ctx_output2/relu_mbox_loc_flat
+I0512 11:23:11.336282   498 net.cpp:260] Setting up ctx_output2/relu_mbox_loc_flat
+I0512 11:23:11.336292   498 net.cpp:267] TEST Top shape for layer 73 'ctx_output2/relu_mbox_loc_flat' 10 5760 (57600)
+I0512 11:23:11.336302   498 layer_factory.hpp:172] Creating layer 'ctx_output2/relu_mbox_conf' of type 'Convolution'
+I0512 11:23:11.336308   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.336321   498 net.cpp:200] Created Layer ctx_output2/relu_mbox_conf (74)
+I0512 11:23:11.336328   498 net.cpp:572] ctx_output2/relu_mbox_conf <- ctx_output2_ctx_output2/relu_0_split_1
+I0512 11:23:11.336334   498 net.cpp:542] ctx_output2/relu_mbox_conf -> ctx_output2/relu_mbox_conf
+I0512 11:23:11.336621   498 net.cpp:260] Setting up ctx_output2/relu_mbox_conf
+I0512 11:23:11.336628   498 net.cpp:267] TEST Top shape for layer 74 'ctx_output2/relu_mbox_conf' 10 24 10 24 (57600)
+I0512 11:23:11.336639   498 layer_factory.hpp:172] Creating layer 'ctx_output2/relu_mbox_conf_perm' of type 'Permute'
+I0512 11:23:11.336644   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.336652   498 net.cpp:200] Created Layer ctx_output2/relu_mbox_conf_perm (75)
+I0512 11:23:11.336658   498 net.cpp:572] ctx_output2/relu_mbox_conf_perm <- ctx_output2/relu_mbox_conf
+I0512 11:23:11.336664   498 net.cpp:542] ctx_output2/relu_mbox_conf_perm -> ctx_output2/relu_mbox_conf_perm
+I0512 11:23:11.336740   498 net.cpp:260] Setting up ctx_output2/relu_mbox_conf_perm
+I0512 11:23:11.336745   498 net.cpp:267] TEST Top shape for layer 75 'ctx_output2/relu_mbox_conf_perm' 10 10 24 24 (57600)
+I0512 11:23:11.336750   498 layer_factory.hpp:172] Creating layer 'ctx_output2/relu_mbox_conf_flat' of type 'Flatten'
+I0512 11:23:11.336755   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.336760   498 net.cpp:200] Created Layer ctx_output2/relu_mbox_conf_flat (76)
+I0512 11:23:11.336764   498 net.cpp:572] ctx_output2/relu_mbox_conf_flat <- ctx_output2/relu_mbox_conf_perm
+I0512 11:23:11.336768   498 net.cpp:542] ctx_output2/relu_mbox_conf_flat -> ctx_output2/relu_mbox_conf_flat
+I0512 11:23:11.337396   498 net.cpp:260] Setting up ctx_output2/relu_mbox_conf_flat
+I0512 11:23:11.337405   498 net.cpp:267] TEST Top shape for layer 76 'ctx_output2/relu_mbox_conf_flat' 10 5760 (57600)
+I0512 11:23:11.337424   498 layer_factory.hpp:172] Creating layer 'ctx_output2/relu_mbox_priorbox' of type 'PriorBox'
+I0512 11:23:11.337427   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.337440   498 net.cpp:200] Created Layer ctx_output2/relu_mbox_priorbox (77)
+I0512 11:23:11.337468   498 net.cpp:572] ctx_output2/relu_mbox_priorbox <- ctx_output2_ctx_output2/relu_0_split_2
+I0512 11:23:11.337478   498 net.cpp:572] ctx_output2/relu_mbox_priorbox <- data_data_0_split_2
+I0512 11:23:11.337486   498 net.cpp:542] ctx_output2/relu_mbox_priorbox -> ctx_output2/relu_mbox_priorbox
+I0512 11:23:11.337517   498 net.cpp:260] Setting up ctx_output2/relu_mbox_priorbox
+I0512 11:23:11.337524   498 net.cpp:267] TEST Top shape for layer 77 'ctx_output2/relu_mbox_priorbox' 1 2 5760 (11520)
+I0512 11:23:11.337532   498 layer_factory.hpp:172] Creating layer 'ctx_output3/relu_mbox_loc' of type 'Convolution'
+I0512 11:23:11.337536   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.337548   498 net.cpp:200] Created Layer ctx_output3/relu_mbox_loc (78)
+I0512 11:23:11.337554   498 net.cpp:572] ctx_output3/relu_mbox_loc <- ctx_output3_ctx_output3/relu_0_split_0
+I0512 11:23:11.337559   498 net.cpp:542] ctx_output3/relu_mbox_loc -> ctx_output3/relu_mbox_loc
+I0512 11:23:11.337834   498 net.cpp:260] Setting up ctx_output3/relu_mbox_loc
+I0512 11:23:11.337841   498 net.cpp:267] TEST Top shape for layer 78 'ctx_output3/relu_mbox_loc' 10 24 5 12 (14400)
+I0512 11:23:11.337849   498 layer_factory.hpp:172] Creating layer 'ctx_output3/relu_mbox_loc_perm' of type 'Permute'
+I0512 11:23:11.337855   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.337867   498 net.cpp:200] Created Layer ctx_output3/relu_mbox_loc_perm (79)
+I0512 11:23:11.337873   498 net.cpp:572] ctx_output3/relu_mbox_loc_perm <- ctx_output3/relu_mbox_loc
+I0512 11:23:11.337879   498 net.cpp:542] ctx_output3/relu_mbox_loc_perm -> ctx_output3/relu_mbox_loc_perm
+I0512 11:23:11.337965   498 net.cpp:260] Setting up ctx_output3/relu_mbox_loc_perm
+I0512 11:23:11.337970   498 net.cpp:267] TEST Top shape for layer 79 'ctx_output3/relu_mbox_loc_perm' 10 5 12 24 (14400)
+I0512 11:23:11.337976   498 layer_factory.hpp:172] Creating layer 'ctx_output3/relu_mbox_loc_flat' of type 'Flatten'
+I0512 11:23:11.337981   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.337987   498 net.cpp:200] Created Layer ctx_output3/relu_mbox_loc_flat (80)
+I0512 11:23:11.337991   498 net.cpp:572] ctx_output3/relu_mbox_loc_flat <- ctx_output3/relu_mbox_loc_perm
+I0512 11:23:11.337996   498 net.cpp:542] ctx_output3/relu_mbox_loc_flat -> ctx_output3/relu_mbox_loc_flat
+I0512 11:23:11.338057   498 net.cpp:260] Setting up ctx_output3/relu_mbox_loc_flat
+I0512 11:23:11.338061   498 net.cpp:267] TEST Top shape for layer 80 'ctx_output3/relu_mbox_loc_flat' 10 1440 (14400)
+I0512 11:23:11.338068   498 layer_factory.hpp:172] Creating layer 'ctx_output3/relu_mbox_conf' of type 'Convolution'
+I0512 11:23:11.338071   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.338081   498 net.cpp:200] Created Layer ctx_output3/relu_mbox_conf (81)
+I0512 11:23:11.338088   498 net.cpp:572] ctx_output3/relu_mbox_conf <- ctx_output3_ctx_output3/relu_0_split_1
+I0512 11:23:11.338094   498 net.cpp:542] ctx_output3/relu_mbox_conf -> ctx_output3/relu_mbox_conf
+I0512 11:23:11.338362   498 net.cpp:260] Setting up ctx_output3/relu_mbox_conf
+I0512 11:23:11.338368   498 net.cpp:267] TEST Top shape for layer 81 'ctx_output3/relu_mbox_conf' 10 24 5 12 (14400)
+I0512 11:23:11.338377   498 layer_factory.hpp:172] Creating layer 'ctx_output3/relu_mbox_conf_perm' of type 'Permute'
+I0512 11:23:11.338382   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.338389   498 net.cpp:200] Created Layer ctx_output3/relu_mbox_conf_perm (82)
+I0512 11:23:11.338407   498 net.cpp:572] ctx_output3/relu_mbox_conf_perm <- ctx_output3/relu_mbox_conf
+I0512 11:23:11.338413   498 net.cpp:542] ctx_output3/relu_mbox_conf_perm -> ctx_output3/relu_mbox_conf_perm
+I0512 11:23:11.338500   498 net.cpp:260] Setting up ctx_output3/relu_mbox_conf_perm
+I0512 11:23:11.338505   498 net.cpp:267] TEST Top shape for layer 82 'ctx_output3/relu_mbox_conf_perm' 10 5 12 24 (14400)
+I0512 11:23:11.338513   498 layer_factory.hpp:172] Creating layer 'ctx_output3/relu_mbox_conf_flat' of type 'Flatten'
+I0512 11:23:11.338517   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.338522   498 net.cpp:200] Created Layer ctx_output3/relu_mbox_conf_flat (83)
+I0512 11:23:11.338528   498 net.cpp:572] ctx_output3/relu_mbox_conf_flat <- ctx_output3/relu_mbox_conf_perm
+I0512 11:23:11.338536   498 net.cpp:542] ctx_output3/relu_mbox_conf_flat -> ctx_output3/relu_mbox_conf_flat
+I0512 11:23:11.338598   498 net.cpp:260] Setting up ctx_output3/relu_mbox_conf_flat
+I0512 11:23:11.338603   498 net.cpp:267] TEST Top shape for layer 83 'ctx_output3/relu_mbox_conf_flat' 10 1440 (14400)
+I0512 11:23:11.338609   498 layer_factory.hpp:172] Creating layer 'ctx_output3/relu_mbox_priorbox' of type 'PriorBox'
+I0512 11:23:11.338614   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.338620   498 net.cpp:200] Created Layer ctx_output3/relu_mbox_priorbox (84)
+I0512 11:23:11.338626   498 net.cpp:572] ctx_output3/relu_mbox_priorbox <- ctx_output3_ctx_output3/relu_0_split_2
+I0512 11:23:11.338631   498 net.cpp:572] ctx_output3/relu_mbox_priorbox <- data_data_0_split_3
+I0512 11:23:11.338639   498 net.cpp:542] ctx_output3/relu_mbox_priorbox -> ctx_output3/relu_mbox_priorbox
+I0512 11:23:11.338665   498 net.cpp:260] Setting up ctx_output3/relu_mbox_priorbox
+I0512 11:23:11.338673   498 net.cpp:267] TEST Top shape for layer 84 'ctx_output3/relu_mbox_priorbox' 1 2 1440 (2880)
+I0512 11:23:11.338682   498 layer_factory.hpp:172] Creating layer 'ctx_output4/relu_mbox_loc' of type 'Convolution'
+I0512 11:23:11.338687   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.338703   498 net.cpp:200] Created Layer ctx_output4/relu_mbox_loc (85)
+I0512 11:23:11.338711   498 net.cpp:572] ctx_output4/relu_mbox_loc <- ctx_output4_ctx_output4/relu_0_split_0
+I0512 11:23:11.338721   498 net.cpp:542] ctx_output4/relu_mbox_loc -> ctx_output4/relu_mbox_loc
+I0512 11:23:11.338994   498 net.cpp:260] Setting up ctx_output4/relu_mbox_loc
+I0512 11:23:11.339000   498 net.cpp:267] TEST Top shape for layer 85 'ctx_output4/relu_mbox_loc' 10 24 3 6 (4320)
+I0512 11:23:11.339010   498 layer_factory.hpp:172] Creating layer 'ctx_output4/relu_mbox_loc_perm' of type 'Permute'
+I0512 11:23:11.339015   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.339022   498 net.cpp:200] Created Layer ctx_output4/relu_mbox_loc_perm (86)
+I0512 11:23:11.339030   498 net.cpp:572] ctx_output4/relu_mbox_loc_perm <- ctx_output4/relu_mbox_loc
+I0512 11:23:11.339036   498 net.cpp:542] ctx_output4/relu_mbox_loc_perm -> ctx_output4/relu_mbox_loc_perm
+I0512 11:23:11.339133   498 net.cpp:260] Setting up ctx_output4/relu_mbox_loc_perm
+I0512 11:23:11.339138   498 net.cpp:267] TEST Top shape for layer 86 'ctx_output4/relu_mbox_loc_perm' 10 3 6 24 (4320)
+I0512 11:23:11.339143   498 layer_factory.hpp:172] Creating layer 'ctx_output4/relu_mbox_loc_flat' of type 'Flatten'
+I0512 11:23:11.339148   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.339154   498 net.cpp:200] Created Layer ctx_output4/relu_mbox_loc_flat (87)
+I0512 11:23:11.339160   498 net.cpp:572] ctx_output4/relu_mbox_loc_flat <- ctx_output4/relu_mbox_loc_perm
+I0512 11:23:11.339169   498 net.cpp:542] ctx_output4/relu_mbox_loc_flat -> ctx_output4/relu_mbox_loc_flat
+I0512 11:23:11.339229   498 net.cpp:260] Setting up ctx_output4/relu_mbox_loc_flat
+I0512 11:23:11.339243   498 net.cpp:267] TEST Top shape for layer 87 'ctx_output4/relu_mbox_loc_flat' 10 432 (4320)
+I0512 11:23:11.339249   498 layer_factory.hpp:172] Creating layer 'ctx_output4/relu_mbox_conf' of type 'Convolution'
+I0512 11:23:11.339254   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.339267   498 net.cpp:200] Created Layer ctx_output4/relu_mbox_conf (88)
+I0512 11:23:11.339275   498 net.cpp:572] ctx_output4/relu_mbox_conf <- ctx_output4_ctx_output4/relu_0_split_1
+I0512 11:23:11.339282   498 net.cpp:542] ctx_output4/relu_mbox_conf -> ctx_output4/relu_mbox_conf
+I0512 11:23:11.339540   498 net.cpp:260] Setting up ctx_output4/relu_mbox_conf
+I0512 11:23:11.339547   498 net.cpp:267] TEST Top shape for layer 88 'ctx_output4/relu_mbox_conf' 10 24 3 6 (4320)
+I0512 11:23:11.339555   498 layer_factory.hpp:172] Creating layer 'ctx_output4/relu_mbox_conf_perm' of type 'Permute'
+I0512 11:23:11.339561   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.339570   498 net.cpp:200] Created Layer ctx_output4/relu_mbox_conf_perm (89)
+I0512 11:23:11.339576   498 net.cpp:572] ctx_output4/relu_mbox_conf_perm <- ctx_output4/relu_mbox_conf
+I0512 11:23:11.339583   498 net.cpp:542] ctx_output4/relu_mbox_conf_perm -> ctx_output4/relu_mbox_conf_perm
+I0512 11:23:11.339658   498 net.cpp:260] Setting up ctx_output4/relu_mbox_conf_perm
+I0512 11:23:11.339664   498 net.cpp:267] TEST Top shape for layer 89 'ctx_output4/relu_mbox_conf_perm' 10 3 6 24 (4320)
+I0512 11:23:11.339670   498 layer_factory.hpp:172] Creating layer 'ctx_output4/relu_mbox_conf_flat' of type 'Flatten'
+I0512 11:23:11.339675   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.339681   498 net.cpp:200] Created Layer ctx_output4/relu_mbox_conf_flat (90)
+I0512 11:23:11.339687   498 net.cpp:572] ctx_output4/relu_mbox_conf_flat <- ctx_output4/relu_mbox_conf_perm
+I0512 11:23:11.339694   498 net.cpp:542] ctx_output4/relu_mbox_conf_flat -> ctx_output4/relu_mbox_conf_flat
+I0512 11:23:11.339748   498 net.cpp:260] Setting up ctx_output4/relu_mbox_conf_flat
+I0512 11:23:11.339754   498 net.cpp:267] TEST Top shape for layer 90 'ctx_output4/relu_mbox_conf_flat' 10 432 (4320)
+I0512 11:23:11.339761   498 layer_factory.hpp:172] Creating layer 'ctx_output4/relu_mbox_priorbox' of type 'PriorBox'
+I0512 11:23:11.339764   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.339772   498 net.cpp:200] Created Layer ctx_output4/relu_mbox_priorbox (91)
+I0512 11:23:11.339779   498 net.cpp:572] ctx_output4/relu_mbox_priorbox <- ctx_output4_ctx_output4/relu_0_split_2
+I0512 11:23:11.339787   498 net.cpp:572] ctx_output4/relu_mbox_priorbox <- data_data_0_split_4
+I0512 11:23:11.339794   498 net.cpp:542] ctx_output4/relu_mbox_priorbox -> ctx_output4/relu_mbox_priorbox
+I0512 11:23:11.339815   498 net.cpp:260] Setting up ctx_output4/relu_mbox_priorbox
+I0512 11:23:11.339821   498 net.cpp:267] TEST Top shape for layer 91 'ctx_output4/relu_mbox_priorbox' 1 2 432 (864)
+I0512 11:23:11.339828   498 layer_factory.hpp:172] Creating layer 'ctx_output5/relu_mbox_loc' of type 'Convolution'
+I0512 11:23:11.339831   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.339843   498 net.cpp:200] Created Layer ctx_output5/relu_mbox_loc (92)
+I0512 11:23:11.339849   498 net.cpp:572] ctx_output5/relu_mbox_loc <- ctx_output5_ctx_output5/relu_0_split_0
+I0512 11:23:11.339856   498 net.cpp:542] ctx_output5/relu_mbox_loc -> ctx_output5/relu_mbox_loc
+I0512 11:23:11.340086   498 net.cpp:260] Setting up ctx_output5/relu_mbox_loc
+I0512 11:23:11.340092   498 net.cpp:267] TEST Top shape for layer 92 'ctx_output5/relu_mbox_loc' 10 16 2 3 (960)
+I0512 11:23:11.340101   498 layer_factory.hpp:172] Creating layer 'ctx_output5/relu_mbox_loc_perm' of type 'Permute'
+I0512 11:23:11.340106   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.340126   498 net.cpp:200] Created Layer ctx_output5/relu_mbox_loc_perm (93)
+I0512 11:23:11.340132   498 net.cpp:572] ctx_output5/relu_mbox_loc_perm <- ctx_output5/relu_mbox_loc
+I0512 11:23:11.340138   498 net.cpp:542] ctx_output5/relu_mbox_loc_perm -> ctx_output5/relu_mbox_loc_perm
+I0512 11:23:11.340209   498 net.cpp:260] Setting up ctx_output5/relu_mbox_loc_perm
+I0512 11:23:11.340214   498 net.cpp:267] TEST Top shape for layer 93 'ctx_output5/relu_mbox_loc_perm' 10 2 3 16 (960)
+I0512 11:23:11.340220   498 layer_factory.hpp:172] Creating layer 'ctx_output5/relu_mbox_loc_flat' of type 'Flatten'
+I0512 11:23:11.340225   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.340231   498 net.cpp:200] Created Layer ctx_output5/relu_mbox_loc_flat (94)
+I0512 11:23:11.340238   498 net.cpp:572] ctx_output5/relu_mbox_loc_flat <- ctx_output5/relu_mbox_loc_perm
+I0512 11:23:11.340245   498 net.cpp:542] ctx_output5/relu_mbox_loc_flat -> ctx_output5/relu_mbox_loc_flat
+I0512 11:23:11.340291   498 net.cpp:260] Setting up ctx_output5/relu_mbox_loc_flat
+I0512 11:23:11.340296   498 net.cpp:267] TEST Top shape for layer 94 'ctx_output5/relu_mbox_loc_flat' 10 96 (960)
+I0512 11:23:11.340302   498 layer_factory.hpp:172] Creating layer 'ctx_output5/relu_mbox_conf' of type 'Convolution'
+I0512 11:23:11.340307   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.340317   498 net.cpp:200] Created Layer ctx_output5/relu_mbox_conf (95)
+I0512 11:23:11.340322   498 net.cpp:572] ctx_output5/relu_mbox_conf <- ctx_output5_ctx_output5/relu_0_split_1
+I0512 11:23:11.340327   498 net.cpp:542] ctx_output5/relu_mbox_conf -> ctx_output5/relu_mbox_conf
+I0512 11:23:11.340550   498 net.cpp:260] Setting up ctx_output5/relu_mbox_conf
+I0512 11:23:11.340556   498 net.cpp:267] TEST Top shape for layer 95 'ctx_output5/relu_mbox_conf' 10 16 2 3 (960)
+I0512 11:23:11.340564   498 layer_factory.hpp:172] Creating layer 'ctx_output5/relu_mbox_conf_perm' of type 'Permute'
+I0512 11:23:11.340570   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.340580   498 net.cpp:200] Created Layer ctx_output5/relu_mbox_conf_perm (96)
+I0512 11:23:11.340586   498 net.cpp:572] ctx_output5/relu_mbox_conf_perm <- ctx_output5/relu_mbox_conf
+I0512 11:23:11.340595   498 net.cpp:542] ctx_output5/relu_mbox_conf_perm -> ctx_output5/relu_mbox_conf_perm
+I0512 11:23:11.340674   498 net.cpp:260] Setting up ctx_output5/relu_mbox_conf_perm
+I0512 11:23:11.340680   498 net.cpp:267] TEST Top shape for layer 96 'ctx_output5/relu_mbox_conf_perm' 10 2 3 16 (960)
+I0512 11:23:11.340687   498 layer_factory.hpp:172] Creating layer 'ctx_output5/relu_mbox_conf_flat' of type 'Flatten'
+I0512 11:23:11.340696   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.340704   498 net.cpp:200] Created Layer ctx_output5/relu_mbox_conf_flat (97)
+I0512 11:23:11.340711   498 net.cpp:572] ctx_output5/relu_mbox_conf_flat <- ctx_output5/relu_mbox_conf_perm
+I0512 11:23:11.340718   498 net.cpp:542] ctx_output5/relu_mbox_conf_flat -> ctx_output5/relu_mbox_conf_flat
+I0512 11:23:11.340767   498 net.cpp:260] Setting up ctx_output5/relu_mbox_conf_flat
+I0512 11:23:11.340773   498 net.cpp:267] TEST Top shape for layer 97 'ctx_output5/relu_mbox_conf_flat' 10 96 (960)
+I0512 11:23:11.340780   498 layer_factory.hpp:172] Creating layer 'ctx_output5/relu_mbox_priorbox' of type 'PriorBox'
+I0512 11:23:11.340787   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.340800   498 net.cpp:200] Created Layer ctx_output5/relu_mbox_priorbox (98)
+I0512 11:23:11.340806   498 net.cpp:572] ctx_output5/relu_mbox_priorbox <- ctx_output5_ctx_output5/relu_0_split_2
+I0512 11:23:11.340814   498 net.cpp:572] ctx_output5/relu_mbox_priorbox <- data_data_0_split_5
+I0512 11:23:11.340822   498 net.cpp:542] ctx_output5/relu_mbox_priorbox -> ctx_output5/relu_mbox_priorbox
+I0512 11:23:11.340854   498 net.cpp:260] Setting up ctx_output5/relu_mbox_priorbox
+I0512 11:23:11.340860   498 net.cpp:267] TEST Top shape for layer 98 'ctx_output5/relu_mbox_priorbox' 1 2 96 (192)
+I0512 11:23:11.340869   498 layer_factory.hpp:172] Creating layer 'ctx_output6/relu_mbox_loc' of type 'Convolution'
+I0512 11:23:11.340878   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.340891   498 net.cpp:200] Created Layer ctx_output6/relu_mbox_loc (99)
+I0512 11:23:11.340900   498 net.cpp:572] ctx_output6/relu_mbox_loc <- ctx_output6_ctx_output6/relu_0_split_0
+I0512 11:23:11.340905   498 net.cpp:542] ctx_output6/relu_mbox_loc -> ctx_output6/relu_mbox_loc
+I0512 11:23:11.341152   498 net.cpp:260] Setting up ctx_output6/relu_mbox_loc
+I0512 11:23:11.341159   498 net.cpp:267] TEST Top shape for layer 99 'ctx_output6/relu_mbox_loc' 10 16 1 2 (320)
+I0512 11:23:11.341176   498 layer_factory.hpp:172] Creating layer 'ctx_output6/relu_mbox_loc_perm' of type 'Permute'
+I0512 11:23:11.341184   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.341198   498 net.cpp:200] Created Layer ctx_output6/relu_mbox_loc_perm (100)
+I0512 11:23:11.341205   498 net.cpp:572] ctx_output6/relu_mbox_loc_perm <- ctx_output6/relu_mbox_loc
+I0512 11:23:11.341213   498 net.cpp:542] ctx_output6/relu_mbox_loc_perm -> ctx_output6/relu_mbox_loc_perm
+I0512 11:23:11.341295   498 net.cpp:260] Setting up ctx_output6/relu_mbox_loc_perm
+I0512 11:23:11.341301   498 net.cpp:267] TEST Top shape for layer 100 'ctx_output6/relu_mbox_loc_perm' 10 1 2 16 (320)
+I0512 11:23:11.341308   498 layer_factory.hpp:172] Creating layer 'ctx_output6/relu_mbox_loc_flat' of type 'Flatten'
+I0512 11:23:11.341312   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.341317   498 net.cpp:200] Created Layer ctx_output6/relu_mbox_loc_flat (101)
+I0512 11:23:11.341322   498 net.cpp:572] ctx_output6/relu_mbox_loc_flat <- ctx_output6/relu_mbox_loc_perm
+I0512 11:23:11.341327   498 net.cpp:542] ctx_output6/relu_mbox_loc_flat -> ctx_output6/relu_mbox_loc_flat
+I0512 11:23:11.341378   498 net.cpp:260] Setting up ctx_output6/relu_mbox_loc_flat
+I0512 11:23:11.341383   498 net.cpp:267] TEST Top shape for layer 101 'ctx_output6/relu_mbox_loc_flat' 10 32 (320)
+I0512 11:23:11.341389   498 layer_factory.hpp:172] Creating layer 'ctx_output6/relu_mbox_conf' of type 'Convolution'
+I0512 11:23:11.341392   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.341403   498 net.cpp:200] Created Layer ctx_output6/relu_mbox_conf (102)
+I0512 11:23:11.341410   498 net.cpp:572] ctx_output6/relu_mbox_conf <- ctx_output6_ctx_output6/relu_0_split_1
+I0512 11:23:11.341418   498 net.cpp:542] ctx_output6/relu_mbox_conf -> ctx_output6/relu_mbox_conf
+I0512 11:23:11.341655   498 net.cpp:260] Setting up ctx_output6/relu_mbox_conf
+I0512 11:23:11.341662   498 net.cpp:267] TEST Top shape for layer 102 'ctx_output6/relu_mbox_conf' 10 16 1 2 (320)
+I0512 11:23:11.341670   498 layer_factory.hpp:172] Creating layer 'ctx_output6/relu_mbox_conf_perm' of type 'Permute'
+I0512 11:23:11.341675   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.341683   498 net.cpp:200] Created Layer ctx_output6/relu_mbox_conf_perm (103)
+I0512 11:23:11.341711   498 net.cpp:572] ctx_output6/relu_mbox_conf_perm <- ctx_output6/relu_mbox_conf
+I0512 11:23:11.341722   498 net.cpp:542] ctx_output6/relu_mbox_conf_perm -> ctx_output6/relu_mbox_conf_perm
+I0512 11:23:11.341800   498 net.cpp:260] Setting up ctx_output6/relu_mbox_conf_perm
+I0512 11:23:11.341805   498 net.cpp:267] TEST Top shape for layer 103 'ctx_output6/relu_mbox_conf_perm' 10 1 2 16 (320)
+I0512 11:23:11.341812   498 layer_factory.hpp:172] Creating layer 'ctx_output6/relu_mbox_conf_flat' of type 'Flatten'
+I0512 11:23:11.341815   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.341836   498 net.cpp:200] Created Layer ctx_output6/relu_mbox_conf_flat (104)
+I0512 11:23:11.341842   498 net.cpp:572] ctx_output6/relu_mbox_conf_flat <- ctx_output6/relu_mbox_conf_perm
+I0512 11:23:11.341846   498 net.cpp:542] ctx_output6/relu_mbox_conf_flat -> ctx_output6/relu_mbox_conf_flat
+I0512 11:23:11.341897   498 net.cpp:260] Setting up ctx_output6/relu_mbox_conf_flat
+I0512 11:23:11.341903   498 net.cpp:267] TEST Top shape for layer 104 'ctx_output6/relu_mbox_conf_flat' 10 32 (320)
+I0512 11:23:11.341909   498 layer_factory.hpp:172] Creating layer 'ctx_output6/relu_mbox_priorbox' of type 'PriorBox'
+I0512 11:23:11.341913   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.341919   498 net.cpp:200] Created Layer ctx_output6/relu_mbox_priorbox (105)
+I0512 11:23:11.341925   498 net.cpp:572] ctx_output6/relu_mbox_priorbox <- ctx_output6_ctx_output6/relu_0_split_2
+I0512 11:23:11.341933   498 net.cpp:572] ctx_output6/relu_mbox_priorbox <- data_data_0_split_6
+I0512 11:23:11.341939   498 net.cpp:542] ctx_output6/relu_mbox_priorbox -> ctx_output6/relu_mbox_priorbox
+I0512 11:23:11.341958   498 net.cpp:260] Setting up ctx_output6/relu_mbox_priorbox
+I0512 11:23:11.341964   498 net.cpp:267] TEST Top shape for layer 105 'ctx_output6/relu_mbox_priorbox' 1 2 32 (64)
+I0512 11:23:11.341969   498 layer_factory.hpp:172] Creating layer 'mbox_loc' of type 'Concat'
+I0512 11:23:11.341972   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.341984   498 net.cpp:200] Created Layer mbox_loc (106)
+I0512 11:23:11.341991   498 net.cpp:572] mbox_loc <- ctx_output1/relu_mbox_loc_flat
+I0512 11:23:11.341998   498 net.cpp:572] mbox_loc <- ctx_output2/relu_mbox_loc_flat
+I0512 11:23:11.342005   498 net.cpp:572] mbox_loc <- ctx_output3/relu_mbox_loc_flat
+I0512 11:23:11.342010   498 net.cpp:572] mbox_loc <- ctx_output4/relu_mbox_loc_flat
+I0512 11:23:11.342013   498 net.cpp:572] mbox_loc <- ctx_output5/relu_mbox_loc_flat
+I0512 11:23:11.342018   498 net.cpp:572] mbox_loc <- ctx_output6/relu_mbox_loc_flat
+I0512 11:23:11.342022   498 net.cpp:542] mbox_loc -> mbox_loc
+I0512 11:23:11.342044   498 net.cpp:260] Setting up mbox_loc
+I0512 11:23:11.342049   498 net.cpp:267] TEST Top shape for layer 106 'mbox_loc' 10 69200 (692000)
+I0512 11:23:11.342056   498 layer_factory.hpp:172] Creating layer 'mbox_conf' of type 'Concat'
+I0512 11:23:11.342059   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.342065   498 net.cpp:200] Created Layer mbox_conf (107)
+I0512 11:23:11.342072   498 net.cpp:572] mbox_conf <- ctx_output1/relu_mbox_conf_flat
+I0512 11:23:11.342078   498 net.cpp:572] mbox_conf <- ctx_output2/relu_mbox_conf_flat
+I0512 11:23:11.342085   498 net.cpp:572] mbox_conf <- ctx_output3/relu_mbox_conf_flat
+I0512 11:23:11.342090   498 net.cpp:572] mbox_conf <- ctx_output4/relu_mbox_conf_flat
+I0512 11:23:11.342098   498 net.cpp:572] mbox_conf <- ctx_output5/relu_mbox_conf_flat
+I0512 11:23:11.342104   498 net.cpp:572] mbox_conf <- ctx_output6/relu_mbox_conf_flat
+I0512 11:23:11.342111   498 net.cpp:542] mbox_conf -> mbox_conf
+I0512 11:23:11.342133   498 net.cpp:260] Setting up mbox_conf
+I0512 11:23:11.342144   498 net.cpp:267] TEST Top shape for layer 107 'mbox_conf' 10 69200 (692000)
+I0512 11:23:11.342154   498 layer_factory.hpp:172] Creating layer 'mbox_priorbox' of type 'Concat'
+I0512 11:23:11.342162   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.342172   498 net.cpp:200] Created Layer mbox_priorbox (108)
+I0512 11:23:11.342180   498 net.cpp:572] mbox_priorbox <- ctx_output1/relu_mbox_priorbox
+I0512 11:23:11.342186   498 net.cpp:572] mbox_priorbox <- ctx_output2/relu_mbox_priorbox
+I0512 11:23:11.342195   498 net.cpp:572] mbox_priorbox <- ctx_output3/relu_mbox_priorbox
+I0512 11:23:11.342202   498 net.cpp:572] mbox_priorbox <- ctx_output4/relu_mbox_priorbox
+I0512 11:23:11.342209   498 net.cpp:572] mbox_priorbox <- ctx_output5/relu_mbox_priorbox
+I0512 11:23:11.342226   498 net.cpp:572] mbox_priorbox <- ctx_output6/relu_mbox_priorbox
+I0512 11:23:11.342232   498 net.cpp:542] mbox_priorbox -> mbox_priorbox
+I0512 11:23:11.342259   498 net.cpp:260] Setting up mbox_priorbox
+I0512 11:23:11.342268   498 net.cpp:267] TEST Top shape for layer 108 'mbox_priorbox' 1 2 69200 (138400)
+I0512 11:23:11.342281   498 layer_factory.hpp:172] Creating layer 'mbox_conf_reshape' of type 'Reshape'
+I0512 11:23:11.342290   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.342304   498 net.cpp:200] Created Layer mbox_conf_reshape (109)
+I0512 11:23:11.342310   498 net.cpp:572] mbox_conf_reshape <- mbox_conf
+I0512 11:23:11.342316   498 net.cpp:542] mbox_conf_reshape -> mbox_conf_reshape
+I0512 11:23:11.342340   498 net.cpp:260] Setting up mbox_conf_reshape
+I0512 11:23:11.342346   498 net.cpp:267] TEST Top shape for layer 109 'mbox_conf_reshape' 10 17300 4 (692000)
+I0512 11:23:11.342356   498 layer_factory.hpp:172] Creating layer 'mbox_conf_softmax' of type 'Softmax'
+I0512 11:23:11.342365   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.342384   498 net.cpp:200] Created Layer mbox_conf_softmax (110)
+I0512 11:23:11.342391   498 net.cpp:572] mbox_conf_softmax <- mbox_conf_reshape
+I0512 11:23:11.342396   498 net.cpp:542] mbox_conf_softmax -> mbox_conf_softmax
+I0512 11:23:11.342449   498 net.cpp:260] Setting up mbox_conf_softmax
+I0512 11:23:11.342455   498 net.cpp:267] TEST Top shape for layer 110 'mbox_conf_softmax' 10 17300 4 (692000)
+I0512 11:23:11.342465   498 layer_factory.hpp:172] Creating layer 'mbox_conf_flatten' of type 'Flatten'
+I0512 11:23:11.342471   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.342479   498 net.cpp:200] Created Layer mbox_conf_flatten (111)
+I0512 11:23:11.342485   498 net.cpp:572] mbox_conf_flatten <- mbox_conf_softmax
+I0512 11:23:11.342492   498 net.cpp:542] mbox_conf_flatten -> mbox_conf_flatten
+I0512 11:23:11.344638   498 net.cpp:260] Setting up mbox_conf_flatten
+I0512 11:23:11.344651   498 net.cpp:267] TEST Top shape for layer 111 'mbox_conf_flatten' 10 69200 (692000)
+I0512 11:23:11.344663   498 layer_factory.hpp:172] Creating layer 'detection_out' of type 'DetectionOutput'
+I0512 11:23:11.344669   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.344702   498 net.cpp:200] Created Layer detection_out (112)
+I0512 11:23:11.344713   498 net.cpp:572] detection_out <- mbox_loc
+I0512 11:23:11.344725   498 net.cpp:572] detection_out <- mbox_conf_flatten
+I0512 11:23:11.344733   498 net.cpp:572] detection_out <- mbox_priorbox
+I0512 11:23:11.344743   498 net.cpp:542] detection_out -> detection_out
+I0512 11:23:11.345219   498 net.cpp:260] Setting up detection_out
+I0512 11:23:11.345229   498 net.cpp:267] TEST Top shape for layer 112 'detection_out' 1 1 1 7 (7)
+I0512 11:23:11.345242   498 layer_factory.hpp:172] Creating layer 'detection_eval' of type 'DetectionEvaluate'
+I0512 11:23:11.345249   498 layer_factory.hpp:184] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0512 11:23:11.345263   498 net.cpp:200] Created Layer detection_eval (113)
+I0512 11:23:11.345273   498 net.cpp:572] detection_eval <- detection_out
+I0512 11:23:11.345279   498 net.cpp:572] detection_eval <- label
+I0512 11:23:11.345284   498 net.cpp:542] detection_eval -> detection_eval
+I0512 11:23:11.345602   498 net.cpp:260] Setting up detection_eval
+I0512 11:23:11.345607   498 net.cpp:267] TEST Top shape for layer 113 'detection_eval' 1 1 4 5 (20)
+I0512 11:23:11.345614   498 net.cpp:338] detection_eval does not need backward computation.
+I0512 11:23:11.345618   498 net.cpp:338] detection_out does not need backward computation.
+I0512 11:23:11.345624   498 net.cpp:338] mbox_conf_flatten does not need backward computation.
+I0512 11:23:11.345633   498 net.cpp:338] mbox_conf_softmax does not need backward computation.
+I0512 11:23:11.345649   498 net.cpp:338] mbox_conf_reshape does not need backward computation.
+I0512 11:23:11.345655   498 net.cpp:338] mbox_priorbox does not need backward computation.
+I0512 11:23:11.345664   498 net.cpp:338] mbox_conf does not need backward computation.
+I0512 11:23:11.345674   498 net.cpp:338] mbox_loc does not need backward computation.
+I0512 11:23:11.345681   498 net.cpp:338] ctx_output6/relu_mbox_priorbox does not need backward computation.
+I0512 11:23:11.345688   498 net.cpp:338] ctx_output6/relu_mbox_conf_flat does not need backward computation.
+I0512 11:23:11.345695   498 net.cpp:338] ctx_output6/relu_mbox_conf_perm does not need backward computation.
+I0512 11:23:11.345702   498 net.cpp:338] ctx_output6/relu_mbox_conf does not need backward computation.
+I0512 11:23:11.345711   498 net.cpp:338] ctx_output6/relu_mbox_loc_flat does not need backward computation.
+I0512 11:23:11.345717   498 net.cpp:338] ctx_output6/relu_mbox_loc_perm does not need backward computation.
+I0512 11:23:11.345723   498 net.cpp:338] ctx_output6/relu_mbox_loc does not need backward computation.
+I0512 11:23:11.345729   498 net.cpp:338] ctx_output5/relu_mbox_priorbox does not need backward computation.
+I0512 11:23:11.345734   498 net.cpp:338] ctx_output5/relu_mbox_conf_flat does not need backward computation.
+I0512 11:23:11.345738   498 net.cpp:338] ctx_output5/relu_mbox_conf_perm does not need backward computation.
+I0512 11:23:11.345746   498 net.cpp:338] ctx_output5/relu_mbox_conf does not need backward computation.
+I0512 11:23:11.345752   498 net.cpp:338] ctx_output5/relu_mbox_loc_flat does not need backward computation.
+I0512 11:23:11.345758   498 net.cpp:338] ctx_output5/relu_mbox_loc_perm does not need backward computation.
+I0512 11:23:11.345764   498 net.cpp:338] ctx_output5/relu_mbox_loc does not need backward computation.
+I0512 11:23:11.345772   498 net.cpp:338] ctx_output4/relu_mbox_priorbox does not need backward computation.
+I0512 11:23:11.345778   498 net.cpp:338] ctx_output4/relu_mbox_conf_flat does not need backward computation.
+I0512 11:23:11.345784   498 net.cpp:338] ctx_output4/relu_mbox_conf_perm does not need backward computation.
+I0512 11:23:11.345788   498 net.cpp:338] ctx_output4/relu_mbox_conf does not need backward computation.
+I0512 11:23:11.345793   498 net.cpp:338] ctx_output4/relu_mbox_loc_flat does not need backward computation.
+I0512 11:23:11.345796   498 net.cpp:338] ctx_output4/relu_mbox_loc_perm does not need backward computation.
+I0512 11:23:11.345800   498 net.cpp:338] ctx_output4/relu_mbox_loc does not need backward computation.
+I0512 11:23:11.345804   498 net.cpp:338] ctx_output3/relu_mbox_priorbox does not need backward computation.
+I0512 11:23:11.345809   498 net.cpp:338] ctx_output3/relu_mbox_conf_flat does not need backward computation.
+I0512 11:23:11.345816   498 net.cpp:338] ctx_output3/relu_mbox_conf_perm does not need backward computation.
+I0512 11:23:11.345822   498 net.cpp:338] ctx_output3/relu_mbox_conf does not need backward computation.
+I0512 11:23:11.345829   498 net.cpp:338] ctx_output3/relu_mbox_loc_flat does not need backward computation.
+I0512 11:23:11.345835   498 net.cpp:338] ctx_output3/relu_mbox_loc_perm does not need backward computation.
+I0512 11:23:11.345842   498 net.cpp:338] ctx_output3/relu_mbox_loc does not need backward computation.
+I0512 11:23:11.345847   498 net.cpp:338] ctx_output2/relu_mbox_priorbox does not need backward computation.
+I0512 11:23:11.345854   498 net.cpp:338] ctx_output2/relu_mbox_conf_flat does not need backward computation.
+I0512 11:23:11.345861   498 net.cpp:338] ctx_output2/relu_mbox_conf_perm does not need backward computation.
+I0512 11:23:11.345865   498 net.cpp:338] ctx_output2/relu_mbox_conf does not need backward computation.
+I0512 11:23:11.345870   498 net.cpp:338] ctx_output2/relu_mbox_loc_flat does not need backward computation.
+I0512 11:23:11.345875   498 net.cpp:338] ctx_output2/relu_mbox_loc_perm does not need backward computation.
+I0512 11:23:11.345881   498 net.cpp:338] ctx_output2/relu_mbox_loc does not need backward computation.
+I0512 11:23:11.345893   498 net.cpp:338] ctx_output1/relu_mbox_priorbox does not need backward computation.
+I0512 11:23:11.345898   498 net.cpp:338] ctx_output1/relu_mbox_conf_flat does not need backward computation.
+I0512 11:23:11.345903   498 net.cpp:338] ctx_output1/relu_mbox_conf_perm does not need backward computation.
+I0512 11:23:11.345909   498 net.cpp:338] ctx_output1/relu_mbox_conf does not need backward computation.
+I0512 11:23:11.345917   498 net.cpp:338] ctx_output1/relu_mbox_loc_flat does not need backward computation.
+I0512 11:23:11.345922   498 net.cpp:338] ctx_output1/relu_mbox_loc_perm does not need backward computation.
+I0512 11:23:11.345927   498 net.cpp:338] ctx_output1/relu_mbox_loc does not need backward computation.
+I0512 11:23:11.345933   498 net.cpp:338] ctx_output6_ctx_output6/relu_0_split does not need backward computation.
+I0512 11:23:11.345940   498 net.cpp:338] ctx_output6/relu does not need backward computation.
+I0512 11:23:11.345945   498 net.cpp:338] ctx_output6 does not need backward computation.
+I0512 11:23:11.345953   498 net.cpp:338] ctx_output5_ctx_output5/relu_0_split does not need backward computation.
+I0512 11:23:11.345958   498 net.cpp:338] ctx_output5/relu does not need backward computation.
+I0512 11:23:11.345965   498 net.cpp:338] ctx_output5 does not need backward computation.
+I0512 11:23:11.345971   498 net.cpp:338] ctx_output4_ctx_output4/relu_0_split does not need backward computation.
+I0512 11:23:11.345978   498 net.cpp:338] ctx_output4/relu does not need backward computation.
+I0512 11:23:11.345984   498 net.cpp:338] ctx_output4 does not need backward computation.
+I0512 11:23:11.345990   498 net.cpp:338] ctx_output3_ctx_output3/relu_0_split does not need backward computation.
+I0512 11:23:11.345995   498 net.cpp:338] ctx_output3/relu does not need backward computation.
+I0512 11:23:11.346004   498 net.cpp:338] ctx_output3 does not need backward computation.
+I0512 11:23:11.346010   498 net.cpp:338] ctx_output2_ctx_output2/relu_0_split does not need backward computation.
+I0512 11:23:11.346019   498 net.cpp:338] ctx_output2/relu does not need backward computation.
+I0512 11:23:11.346024   498 net.cpp:338] ctx_output2 does not need backward computation.
+I0512 11:23:11.346031   498 net.cpp:338] ctx_output1_ctx_output1/relu_0_split does not need backward computation.
+I0512 11:23:11.346038   498 net.cpp:338] ctx_output1/relu does not need backward computation.
+I0512 11:23:11.346045   498 net.cpp:338] ctx_output1 does not need backward computation.
+I0512 11:23:11.346053   498 net.cpp:338] pool9 does not need backward computation.
+I0512 11:23:11.346060   498 net.cpp:338] pool8_pool8_0_split does not need backward computation.
+I0512 11:23:11.346067   498 net.cpp:338] pool8 does not need backward computation.
+I0512 11:23:11.346076   498 net.cpp:338] pool7_pool7_0_split does not need backward computation.
+I0512 11:23:11.346082   498 net.cpp:338] pool7 does not need backward computation.
+I0512 11:23:11.346091   498 net.cpp:338] pool6_pool6_0_split does not need backward computation.
+I0512 11:23:11.346097   498 net.cpp:338] pool6 does not need backward computation.
+I0512 11:23:11.346105   498 net.cpp:338] res5a_branch2b_res5a_branch2b/relu_0_split does not need backward computation.
+I0512 11:23:11.346112   498 net.cpp:338] res5a_branch2b/relu does not need backward computation.
+I0512 11:23:11.346119   498 net.cpp:338] res5a_branch2b/bn does not need backward computation.
+I0512 11:23:11.346124   498 net.cpp:338] res5a_branch2b does not need backward computation.
+I0512 11:23:11.346130   498 net.cpp:338] res5a_branch2a/relu does not need backward computation.
+I0512 11:23:11.346137   498 net.cpp:338] res5a_branch2a/bn does not need backward computation.
+I0512 11:23:11.346141   498 net.cpp:338] res5a_branch2a does not need backward computation.
+I0512 11:23:11.346146   498 net.cpp:338] pool4 does not need backward computation.
+I0512 11:23:11.346151   498 net.cpp:338] res4a_branch2b/relu does not need backward computation.
+I0512 11:23:11.346155   498 net.cpp:338] res4a_branch2b/bn does not need backward computation.
+I0512 11:23:11.346164   498 net.cpp:338] res4a_branch2b does not need backward computation.
+I0512 11:23:11.346169   498 net.cpp:338] res4a_branch2a/relu does not need backward computation.
+I0512 11:23:11.346176   498 net.cpp:338] res4a_branch2a/bn does not need backward computation.
+I0512 11:23:11.346181   498 net.cpp:338] res4a_branch2a does not need backward computation.
+I0512 11:23:11.346189   498 net.cpp:338] pool3 does not need backward computation.
+I0512 11:23:11.346195   498 net.cpp:338] res3a_branch2b_res3a_branch2b/relu_0_split does not need backward computation.
+I0512 11:23:11.346202   498 net.cpp:338] res3a_branch2b/relu does not need backward computation.
+I0512 11:23:11.346208   498 net.cpp:338] res3a_branch2b/bn does not need backward computation.
+I0512 11:23:11.346213   498 net.cpp:338] res3a_branch2b does not need backward computation.
+I0512 11:23:11.346221   498 net.cpp:338] res3a_branch2a/relu does not need backward computation.
+I0512 11:23:11.346226   498 net.cpp:338] res3a_branch2a/bn does not need backward computation.
+I0512 11:23:11.346231   498 net.cpp:338] res3a_branch2a does not need backward computation.
+I0512 11:23:11.346240   498 net.cpp:338] pool2 does not need backward computation.
+I0512 11:23:11.346246   498 net.cpp:338] res2a_branch2b/relu does not need backward computation.
+I0512 11:23:11.346252   498 net.cpp:338] res2a_branch2b/bn does not need backward computation.
+I0512 11:23:11.346257   498 net.cpp:338] res2a_branch2b does not need backward computation.
+I0512 11:23:11.346266   498 net.cpp:338] res2a_branch2a/relu does not need backward computation.
+I0512 11:23:11.346271   498 net.cpp:338] res2a_branch2a/bn does not need backward computation.
+I0512 11:23:11.346276   498 net.cpp:338] res2a_branch2a does not need backward computation.
+I0512 11:23:11.346284   498 net.cpp:338] pool1 does not need backward computation.
+I0512 11:23:11.346290   498 net.cpp:338] conv1b/relu does not need backward computation.
+I0512 11:23:11.346297   498 net.cpp:338] conv1b/bn does not need backward computation.
+I0512 11:23:11.346302   498 net.cpp:338] conv1b does not need backward computation.
+I0512 11:23:11.346312   498 net.cpp:338] conv1a/relu does not need backward computation.
+I0512 11:23:11.346316   498 net.cpp:338] conv1a/bn does not need backward computation.
+I0512 11:23:11.346324   498 net.cpp:338] conv1a does not need backward computation.
+I0512 11:23:11.346330   498 net.cpp:338] data/bias does not need backward computation.
+I0512 11:23:11.346338   498 net.cpp:338] data_data_0_split does not need backward computation.
+I0512 11:23:11.346343   498 net.cpp:338] data does not need backward computation.
+I0512 11:23:11.346346   498 net.cpp:380] This network produces output detection_eval
+I0512 11:23:11.346444   498 net.cpp:403] Top memory (TEST) required for data: 1515720496 diff: 1515720496
+I0512 11:23:11.346451   498 net.cpp:406] Bottom memory (TEST) required for data: 1515720416 diff: 1515720416
+I0512 11:23:11.346454   498 net.cpp:409] Shared (in-place) memory (TEST) by data: 652144640 diff: 652144640
+I0512 11:23:11.346458   498 net.cpp:412] Parameters memory (TEST) required for data: 12464288 diff: 12464288
+I0512 11:23:11.346462   498 net.cpp:415] Parameters shared memory (TEST) by data: 0 diff: 0
+I0512 11:23:11.346467   498 net.cpp:421] Network initialization done.
+I0512 11:23:11.352720   498 net.cpp:1153] Copying source layer data Type:AnnotatedData #blobs=0
+I0512 11:23:11.352735   498 net.cpp:1153] Copying source layer data_data_0_split Type:Split #blobs=0
+I0512 11:23:11.352738   498 net.cpp:1153] Copying source layer data/bias Type:Bias #blobs=1
+I0512 11:23:11.352772   498 net.cpp:1153] Copying source layer conv1a Type:Convolution #blobs=2
+I0512 11:23:11.352792   498 net.cpp:1153] Copying source layer conv1a/bn Type:BatchNorm #blobs=5
+I0512 11:23:11.352839   498 net.cpp:1153] Copying source layer conv1a/relu Type:ReLU #blobs=0
+I0512 11:23:11.352846   498 net.cpp:1153] Copying source layer conv1b Type:Convolution #blobs=2
+I0512 11:23:11.352869   498 net.cpp:1153] Copying source layer conv1b/bn Type:BatchNorm #blobs=5
+I0512 11:23:11.352918   498 net.cpp:1153] Copying source layer conv1b/relu Type:ReLU #blobs=0
+I0512 11:23:11.352926   498 net.cpp:1153] Copying source layer pool1 Type:Pooling #blobs=0
+I0512 11:23:11.352929   498 net.cpp:1153] Copying source layer res2a_branch2a Type:Convolution #blobs=2
+I0512 11:23:11.352960   498 net.cpp:1153] Copying source layer res2a_branch2a/bn Type:BatchNorm #blobs=5
+I0512 11:23:11.353003   498 net.cpp:1153] Copying source layer res2a_branch2a/relu Type:ReLU #blobs=0
+I0512 11:23:11.353008   498 net.cpp:1153] Copying source layer res2a_branch2b Type:Convolution #blobs=2
+I0512 11:23:11.353026   498 net.cpp:1153] Copying source layer res2a_branch2b/bn Type:BatchNorm #blobs=5
+I0512 11:23:11.353065   498 net.cpp:1153] Copying source layer res2a_branch2b/relu Type:ReLU #blobs=0
+I0512 11:23:11.353071   498 net.cpp:1153] Copying source layer pool2 Type:Pooling #blobs=0
+I0512 11:23:11.353075   498 net.cpp:1153] Copying source layer res3a_branch2a Type:Convolution #blobs=2
+I0512 11:23:11.353123   498 net.cpp:1153] Copying source layer res3a_branch2a/bn Type:BatchNorm #blobs=5
+I0512 11:23:11.353163   498 net.cpp:1153] Copying source layer res3a_branch2a/relu Type:ReLU #blobs=0
+I0512 11:23:11.353168   498 net.cpp:1153] Copying source layer res3a_branch2b Type:Convolution #blobs=2
+I0512 11:23:11.353199   498 net.cpp:1153] Copying source layer res3a_branch2b/bn Type:BatchNorm #blobs=5
+I0512 11:23:11.353232   498 net.cpp:1153] Copying source layer res3a_branch2b/relu Type:ReLU #blobs=0
+I0512 11:23:11.353237   498 net.cpp:1153] Copying source layer res3a_branch2b_res3a_branch2b/relu_0_split Type:Split #blobs=0
+I0512 11:23:11.353240   498 net.cpp:1153] Copying source layer pool3 Type:Pooling #blobs=0
+I0512 11:23:11.353243   498 net.cpp:1153] Copying source layer res4a_branch2a Type:Convolution #blobs=2
+I0512 11:23:11.353391   498 net.cpp:1153] Copying source layer res4a_branch2a/bn Type:BatchNorm #blobs=5
+I0512 11:23:11.353427   498 net.cpp:1153] Copying source layer res4a_branch2a/relu Type:ReLU #blobs=0
+I0512 11:23:11.353433   498 net.cpp:1153] Copying source layer res4a_branch2b Type:Convolution #blobs=2
+I0512 11:23:11.353511   498 net.cpp:1153] Copying source layer res4a_branch2b/bn Type:BatchNorm #blobs=5
+I0512 11:23:11.353543   498 net.cpp:1153] Copying source layer res4a_branch2b/relu Type:ReLU #blobs=0
+I0512 11:23:11.353550   498 net.cpp:1153] Copying source layer pool4 Type:Pooling #blobs=0
+I0512 11:23:11.353555   498 net.cpp:1153] Copying source layer res5a_branch2a Type:Convolution #blobs=2
+I0512 11:23:11.354022   498 net.cpp:1153] Copying source layer res5a_branch2a/bn Type:BatchNorm #blobs=5
+I0512 11:23:11.354063   498 net.cpp:1153] Copying source layer res5a_branch2a/relu Type:ReLU #blobs=0
+I0512 11:23:11.354068   498 net.cpp:1153] Copying source layer res5a_branch2b Type:Convolution #blobs=2
+I0512 11:23:11.354329   498 net.cpp:1153] Copying source layer res5a_branch2b/bn Type:BatchNorm #blobs=5
+I0512 11:23:11.354367   498 net.cpp:1153] Copying source layer res5a_branch2b/relu Type:ReLU #blobs=0
+I0512 11:23:11.354374   498 net.cpp:1153] Copying source layer res5a_branch2b_res5a_branch2b/relu_0_split Type:Split #blobs=0
+I0512 11:23:11.354378   498 net.cpp:1153] Copying source layer pool6 Type:Pooling #blobs=0
+I0512 11:23:11.354382   498 net.cpp:1153] Copying source layer pool6_pool6_0_split Type:Split #blobs=0
+I0512 11:23:11.354385   498 net.cpp:1153] Copying source layer pool7 Type:Pooling #blobs=0
+I0512 11:23:11.354393   498 net.cpp:1153] Copying source layer pool7_pool7_0_split Type:Split #blobs=0
+I0512 11:23:11.354398   498 net.cpp:1153] Copying source layer pool8 Type:Pooling #blobs=0
+I0512 11:23:11.354404   498 net.cpp:1153] Copying source layer pool8_pool8_0_split Type:Split #blobs=0
+I0512 11:23:11.354409   498 net.cpp:1153] Copying source layer pool9 Type:Pooling #blobs=0
+I0512 11:23:11.354414   498 net.cpp:1153] Copying source layer ctx_output1 Type:Convolution #blobs=2
+I0512 11:23:11.354456   498 net.cpp:1153] Copying source layer ctx_output1/relu Type:ReLU #blobs=0
+I0512 11:23:11.354477   498 net.cpp:1153] Copying source layer ctx_output1_ctx_output1/relu_0_split Type:Split #blobs=0
+I0512 11:23:11.354481   498 net.cpp:1153] Copying source layer ctx_output2 Type:Convolution #blobs=2
+I0512 11:23:11.354566   498 net.cpp:1153] Copying source layer ctx_output2/relu Type:ReLU #blobs=0
+I0512 11:23:11.354575   498 net.cpp:1153] Copying source layer ctx_output2_ctx_output2/relu_0_split Type:Split #blobs=0
+I0512 11:23:11.354579   498 net.cpp:1153] Copying source layer ctx_output3 Type:Convolution #blobs=2
+I0512 11:23:11.354656   498 net.cpp:1153] Copying source layer ctx_output3/relu Type:ReLU #blobs=0
+I0512 11:23:11.354665   498 net.cpp:1153] Copying source layer ctx_output3_ctx_output3/relu_0_split Type:Split #blobs=0
+I0512 11:23:11.354668   498 net.cpp:1153] Copying source layer ctx_output4 Type:Convolution #blobs=2
+I0512 11:23:11.354748   498 net.cpp:1153] Copying source layer ctx_output4/relu Type:ReLU #blobs=0
+I0512 11:23:11.354756   498 net.cpp:1153] Copying source layer ctx_output4_ctx_output4/relu_0_split Type:Split #blobs=0
+I0512 11:23:11.354760   498 net.cpp:1153] Copying source layer ctx_output5 Type:Convolution #blobs=2
+I0512 11:23:11.354838   498 net.cpp:1153] Copying source layer ctx_output5/relu Type:ReLU #blobs=0
+I0512 11:23:11.354847   498 net.cpp:1153] Copying source layer ctx_output5_ctx_output5/relu_0_split Type:Split #blobs=0
+I0512 11:23:11.354851   498 net.cpp:1153] Copying source layer ctx_output6 Type:Convolution #blobs=2
+I0512 11:23:11.354929   498 net.cpp:1153] Copying source layer ctx_output6/relu Type:ReLU #blobs=0
+I0512 11:23:11.354938   498 net.cpp:1153] Copying source layer ctx_output6_ctx_output6/relu_0_split Type:Split #blobs=0
+I0512 11:23:11.354940   498 net.cpp:1153] Copying source layer ctx_output1/relu_mbox_loc Type:Convolution #blobs=2
+I0512 11:23:11.354961   498 net.cpp:1153] Copying source layer ctx_output1/relu_mbox_loc_perm Type:Permute #blobs=0
+I0512 11:23:11.354967   498 net.cpp:1153] Copying source layer ctx_output1/relu_mbox_loc_flat Type:Flatten #blobs=0
+I0512 11:23:11.354971   498 net.cpp:1153] Copying source layer ctx_output1/relu_mbox_conf Type:Convolution #blobs=2
+I0512 11:23:11.354991   498 net.cpp:1153] Copying source layer ctx_output1/relu_mbox_conf_perm Type:Permute #blobs=0
+I0512 11:23:11.354998   498 net.cpp:1153] Copying source layer ctx_output1/relu_mbox_conf_flat Type:Flatten #blobs=0
+I0512 11:23:11.355002   498 net.cpp:1153] Copying source layer ctx_output1/relu_mbox_priorbox Type:PriorBox #blobs=0
+I0512 11:23:11.355005   498 net.cpp:1153] Copying source layer ctx_output2/relu_mbox_loc Type:Convolution #blobs=2
+I0512 11:23:11.355026   498 net.cpp:1153] Copying source layer ctx_output2/relu_mbox_loc_perm Type:Permute #blobs=0
+I0512 11:23:11.355033   498 net.cpp:1153] Copying source layer ctx_output2/relu_mbox_loc_flat Type:Flatten #blobs=0
+I0512 11:23:11.355036   498 net.cpp:1153] Copying source layer ctx_output2/relu_mbox_conf Type:Convolution #blobs=2
+I0512 11:23:11.355063   498 net.cpp:1153] Copying source layer ctx_output2/relu_mbox_conf_perm Type:Permute #blobs=0
+I0512 11:23:11.355072   498 net.cpp:1153] Copying source layer ctx_output2/relu_mbox_conf_flat Type:Flatten #blobs=0
+I0512 11:23:11.355079   498 net.cpp:1153] Copying source layer ctx_output2/relu_mbox_priorbox Type:PriorBox #blobs=0
+I0512 11:23:11.355084   498 net.cpp:1153] Copying source layer ctx_output3/relu_mbox_loc Type:Convolution #blobs=2
+I0512 11:23:11.355108   498 net.cpp:1153] Copying source layer ctx_output3/relu_mbox_loc_perm Type:Permute #blobs=0
+I0512 11:23:11.355113   498 net.cpp:1153] Copying source layer ctx_output3/relu_mbox_loc_flat Type:Flatten #blobs=0
+I0512 11:23:11.355118   498 net.cpp:1153] Copying source layer ctx_output3/relu_mbox_conf Type:Convolution #blobs=2
+I0512 11:23:11.355140   498 net.cpp:1153] Copying source layer ctx_output3/relu_mbox_conf_perm Type:Permute #blobs=0
+I0512 11:23:11.355146   498 net.cpp:1153] Copying source layer ctx_output3/relu_mbox_conf_flat Type:Flatten #blobs=0
+I0512 11:23:11.355151   498 net.cpp:1153] Copying source layer ctx_output3/relu_mbox_priorbox Type:PriorBox #blobs=0
+I0512 11:23:11.355165   498 net.cpp:1153] Copying source layer ctx_output4/relu_mbox_loc Type:Convolution #blobs=2
+I0512 11:23:11.355197   498 net.cpp:1153] Copying source layer ctx_output4/relu_mbox_loc_perm Type:Permute #blobs=0
+I0512 11:23:11.355206   498 net.cpp:1153] Copying source layer ctx_output4/relu_mbox_loc_flat Type:Flatten #blobs=0
+I0512 11:23:11.355209   498 net.cpp:1153] Copying source layer ctx_output4/relu_mbox_conf Type:Convolution #blobs=2
+I0512 11:23:11.355232   498 net.cpp:1153] Copying source layer ctx_output4/relu_mbox_conf_perm Type:Permute #blobs=0
+I0512 11:23:11.355237   498 net.cpp:1153] Copying source layer ctx_output4/relu_mbox_conf_flat Type:Flatten #blobs=0
+I0512 11:23:11.355240   498 net.cpp:1153] Copying source layer ctx_output4/relu_mbox_priorbox Type:PriorBox #blobs=0
+I0512 11:23:11.355243   498 net.cpp:1153] Copying source layer ctx_output5/relu_mbox_loc Type:Convolution #blobs=2
+I0512 11:23:11.355262   498 net.cpp:1153] Copying source layer ctx_output5/relu_mbox_loc_perm Type:Permute #blobs=0
+I0512 11:23:11.355266   498 net.cpp:1153] Copying source layer ctx_output5/relu_mbox_loc_flat Type:Flatten #blobs=0
+I0512 11:23:11.355271   498 net.cpp:1153] Copying source layer ctx_output5/relu_mbox_conf Type:Convolution #blobs=2
+I0512 11:23:11.355290   498 net.cpp:1153] Copying source layer ctx_output5/relu_mbox_conf_perm Type:Permute #blobs=0
+I0512 11:23:11.355296   498 net.cpp:1153] Copying source layer ctx_output5/relu_mbox_conf_flat Type:Flatten #blobs=0
+I0512 11:23:11.355301   498 net.cpp:1153] Copying source layer ctx_output5/relu_mbox_priorbox Type:PriorBox #blobs=0
+I0512 11:23:11.355307   498 net.cpp:1153] Copying source layer ctx_output6/relu_mbox_loc Type:Convolution #blobs=2
+I0512 11:23:11.355327   498 net.cpp:1153] Copying source layer ctx_output6/relu_mbox_loc_perm Type:Permute #blobs=0
+I0512 11:23:11.355334   498 net.cpp:1153] Copying source layer ctx_output6/relu_mbox_loc_flat Type:Flatten #blobs=0
+I0512 11:23:11.355337   498 net.cpp:1153] Copying source layer ctx_output6/relu_mbox_conf Type:Convolution #blobs=2
+I0512 11:23:11.355356   498 net.cpp:1153] Copying source layer ctx_output6/relu_mbox_conf_perm Type:Permute #blobs=0
+I0512 11:23:11.355363   498 net.cpp:1153] Copying source layer ctx_output6/relu_mbox_conf_flat Type:Flatten #blobs=0
+I0512 11:23:11.355366   498 net.cpp:1153] Copying source layer ctx_output6/relu_mbox_priorbox Type:PriorBox #blobs=0
+I0512 11:23:11.355370   498 net.cpp:1153] Copying source layer mbox_loc Type:Concat #blobs=0
+I0512 11:23:11.355373   498 net.cpp:1153] Copying source layer mbox_conf Type:Concat #blobs=0
+I0512 11:23:11.355376   498 net.cpp:1153] Copying source layer mbox_priorbox Type:Concat #blobs=0
+I0512 11:23:11.355381   498 net.cpp:1137] Ignoring source layer mbox_loss
+I0512 11:23:11.355583   498 caffe.cpp:419] Running for 85 iterations.
+I0512 11:23:11.396422   498 caffe.cpp:449] Batch 0
+I0512 11:23:11.419170   498 caffe.cpp:449] Batch 1
+I0512 11:23:11.495020   498 caffe.cpp:449] Batch 2
+I0512 11:23:11.602697   498 caffe.cpp:449] Batch 3
+I0512 11:23:11.710274   498 caffe.cpp:449] Batch 4
+I0512 11:23:11.817873   498 caffe.cpp:449] Batch 5
+I0512 11:23:11.925905   498 caffe.cpp:449] Batch 6
+I0512 11:23:12.033788   498 caffe.cpp:449] Batch 7
+I0512 11:23:12.140556   498 caffe.cpp:449] Batch 8
+I0512 11:23:12.248531   498 caffe.cpp:449] Batch 9
+I0512 11:23:12.355599   498 caffe.cpp:449] Batch 10
+I0512 11:23:12.461784   498 caffe.cpp:449] Batch 11
+I0512 11:23:12.570276   498 caffe.cpp:449] Batch 12
+I0512 11:23:12.678382   498 caffe.cpp:449] Batch 13
+I0512 11:23:12.785702   498 caffe.cpp:449] Batch 14
+I0512 11:23:12.892874   498 caffe.cpp:449] Batch 15
+I0512 11:23:13.000392   498 caffe.cpp:449] Batch 16
+I0512 11:23:13.106232   498 caffe.cpp:449] Batch 17
+I0512 11:23:13.213353   498 caffe.cpp:449] Batch 18
+I0512 11:23:13.318935   498 caffe.cpp:449] Batch 19
+I0512 11:23:13.426606   498 caffe.cpp:449] Batch 20
+I0512 11:23:13.533864   498 caffe.cpp:449] Batch 21
+I0512 11:23:13.641486   498 caffe.cpp:449] Batch 22
+I0512 11:23:13.748509   498 caffe.cpp:449] Batch 23
+I0512 11:23:13.856581   498 caffe.cpp:449] Batch 24
+I0512 11:23:13.963358   498 caffe.cpp:449] Batch 25
+I0512 11:23:14.072607   498 caffe.cpp:449] Batch 26
+I0512 11:23:14.179491   498 caffe.cpp:449] Batch 27
+I0512 11:23:14.286077   498 caffe.cpp:449] Batch 28
+I0512 11:23:14.393278   498 caffe.cpp:449] Batch 29
+I0512 11:23:14.500517   498 caffe.cpp:449] Batch 30
+I0512 11:23:14.607683   498 caffe.cpp:449] Batch 31
+I0512 11:23:14.714352   498 caffe.cpp:449] Batch 32
+I0512 11:23:14.822268   498 caffe.cpp:449] Batch 33
+I0512 11:23:14.928849   498 caffe.cpp:449] Batch 34
+I0512 11:23:15.037114   498 caffe.cpp:449] Batch 35
+I0512 11:23:15.144627   498 caffe.cpp:449] Batch 36
+I0512 11:23:15.253422   498 caffe.cpp:449] Batch 37
+I0512 11:23:15.361246   498 caffe.cpp:449] Batch 38
+I0512 11:23:15.468729   498 caffe.cpp:449] Batch 39
+I0512 11:23:15.575903   498 caffe.cpp:449] Batch 40
+I0512 11:23:15.683580   498 caffe.cpp:449] Batch 41
+I0512 11:23:15.791067   498 caffe.cpp:449] Batch 42
+I0512 11:23:15.897071   498 caffe.cpp:449] Batch 43
+I0512 11:23:16.004714   498 caffe.cpp:449] Batch 44
+I0512 11:23:16.111428   498 caffe.cpp:449] Batch 45
+I0512 11:23:16.218567   498 caffe.cpp:449] Batch 46
+I0512 11:23:16.325775   498 caffe.cpp:449] Batch 47
+I0512 11:23:16.433482   498 caffe.cpp:449] Batch 48
+I0512 11:23:16.539978   498 caffe.cpp:449] Batch 49
+I0512 11:23:16.646920   498 caffe.cpp:449] Batch 50
+I0512 11:23:16.754892   498 caffe.cpp:449] Batch 51
+I0512 11:23:16.861797   498 caffe.cpp:449] Batch 52
+I0512 11:23:16.968052   498 caffe.cpp:449] Batch 53
+I0512 11:23:17.072311   498 caffe.cpp:449] Batch 54
+I0512 11:23:17.179204   498 caffe.cpp:449] Batch 55
+I0512 11:23:17.288398   498 caffe.cpp:449] Batch 56
+I0512 11:23:17.395721   498 caffe.cpp:449] Batch 57
+I0512 11:23:17.502921   498 caffe.cpp:449] Batch 58
+I0512 11:23:17.609423   498 caffe.cpp:449] Batch 59
+I0512 11:23:17.715229   498 caffe.cpp:449] Batch 60
+I0512 11:23:17.822778   498 caffe.cpp:449] Batch 61
+I0512 11:23:17.930460   498 caffe.cpp:449] Batch 62
+I0512 11:23:18.038231   498 caffe.cpp:449] Batch 63
+I0512 11:23:18.146185   498 caffe.cpp:449] Batch 64
+I0512 11:23:18.252990   498 caffe.cpp:449] Batch 65
+I0512 11:23:18.359697   498 caffe.cpp:449] Batch 66
+I0512 11:23:18.468299   498 caffe.cpp:449] Batch 67
+I0512 11:23:18.575109   498 caffe.cpp:449] Batch 68
+I0512 11:23:18.682137   498 caffe.cpp:449] Batch 69
+I0512 11:23:18.790078   498 caffe.cpp:449] Batch 70
+I0512 11:23:18.896759   498 caffe.cpp:449] Batch 71
+I0512 11:23:19.005017   498 caffe.cpp:449] Batch 72
+I0512 11:23:19.113394   498 caffe.cpp:449] Batch 73
+I0512 11:23:19.220588   498 caffe.cpp:449] Batch 74
+I0512 11:23:19.328512   498 caffe.cpp:449] Batch 75
+I0512 11:23:19.436257   498 caffe.cpp:449] Batch 76
+I0512 11:23:19.543438   498 caffe.cpp:449] Batch 77
+I0512 11:23:19.650223   498 caffe.cpp:449] Batch 78
+I0512 11:23:19.757442   498 caffe.cpp:449] Batch 79
+I0512 11:23:19.864732   498 caffe.cpp:449] Batch 80
+I0512 11:23:19.973284   498 caffe.cpp:449] Batch 81
+I0512 11:23:20.080358   498 caffe.cpp:449] Batch 82
+I0512 11:23:20.149740   504 data_reader.cpp:320] Restarting data pre-fetching
+I0512 11:23:20.187016   498 caffe.cpp:449] Batch 83
+I0512 11:23:20.293607   498 caffe.cpp:449] Batch 84
+I0512 11:23:20.293632   498 caffe.cpp:483] Loss: 0
+I0512 11:23:20.293656   498 caffe.cpp:501] detection_eval = -1
+I0512 11:23:20.293670   498 caffe.cpp:501] detection_eval = 1
+I0512 11:23:20.293673   498 caffe.cpp:501] detection_eval = 11
+I0512 11:23:20.293678   498 caffe.cpp:501] detection_eval = -1
+I0512 11:23:20.293684   498 caffe.cpp:501] detection_eval = -1
+I0512 11:23:20.293694   498 caffe.cpp:501] detection_eval = -1
+I0512 11:23:20.293702   498 caffe.cpp:501] detection_eval = 2
+I0512 11:23:20.293707   498 caffe.cpp:501] detection_eval = 8.22353
+I0512 11:23:20.293715   498 caffe.cpp:501] detection_eval = -1
+I0512 11:23:20.293721   498 caffe.cpp:501] detection_eval = -1
+I0512 11:23:20.293728   498 caffe.cpp:501] detection_eval = -1
+I0512 11:23:20.293753   498 caffe.cpp:501] detection_eval = 3
+I0512 11:23:20.293759   498 caffe.cpp:501] detection_eval = 10.8941
+I0512 11:23:20.293778   498 caffe.cpp:501] detection_eval = -1
+I0512 11:23:20.293784   498 caffe.cpp:501] detection_eval = -1
+I0512 11:23:20.293788   498 caffe.cpp:501] detection_eval = 0
+I0512 11:23:20.293792   498 caffe.cpp:501] detection_eval = 1.14118
+I0512 11:23:20.293797   498 caffe.cpp:501] detection_eval = 0.574656
+I0512 11:23:20.293802   498 caffe.cpp:501] detection_eval = 0.729412
+I0512 11:23:20.293814   498 caffe.cpp:501] detection_eval = 0.270588
+I0512 11:23:20.293820   498 caffe.cpp:501] detection_eval = 0
+I0512 11:23:20.293828   498 caffe.cpp:501] detection_eval = 1.25882
+I0512 11:23:20.293833   498 caffe.cpp:501] detection_eval = 0.43447
+I0512 11:23:20.293840   498 caffe.cpp:501] detection_eval = 0.788235
+I0512 11:23:20.293846   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.293851   498 caffe.cpp:501] detection_eval = 0
+I0512 11:23:20.293857   498 caffe.cpp:501] detection_eval = 1.56471
+I0512 11:23:20.293864   498 caffe.cpp:501] detection_eval = 0.144966
+I0512 11:23:20.293872   498 caffe.cpp:501] detection_eval = 0.235294
+I0512 11:23:20.293877   498 caffe.cpp:501] detection_eval = 0.764706
+I0512 11:23:20.293880   498 caffe.cpp:501] detection_eval = 0
+I0512 11:23:20.293887   498 caffe.cpp:501] detection_eval = 1.75294
+I0512 11:23:20.293898   498 caffe.cpp:501] detection_eval = 0.0647134
+I0512 11:23:20.293905   498 caffe.cpp:501] detection_eval = 0.0470588
+I0512 11:23:20.293910   498 caffe.cpp:501] detection_eval = 0.952941
+I0512 11:23:20.293916   498 caffe.cpp:501] detection_eval = 0
+I0512 11:23:20.293922   498 caffe.cpp:501] detection_eval = 1.88235
+I0512 11:23:20.293927   498 caffe.cpp:501] detection_eval = 0.0588118
+I0512 11:23:20.293933   498 caffe.cpp:501] detection_eval = 0.0470588
+I0512 11:23:20.293941   498 caffe.cpp:501] detection_eval = 0.952941
+I0512 11:23:20.293947   498 caffe.cpp:501] detection_eval = 0.0117647
+I0512 11:23:20.293954   498 caffe.cpp:501] detection_eval = 2
+I0512 11:23:20.293960   498 caffe.cpp:501] detection_eval = 0.0817746
+I0512 11:23:20.293967   498 caffe.cpp:501] detection_eval = 0.0941176
+I0512 11:23:20.293973   498 caffe.cpp:501] detection_eval = 0.905882
+I0512 11:23:20.293982   498 caffe.cpp:501] detection_eval = 0.0352941
+I0512 11:23:20.293987   498 caffe.cpp:501] detection_eval = 2.09412
+I0512 11:23:20.293994   498 caffe.cpp:501] detection_eval = 0.148763
+I0512 11:23:20.294000   498 caffe.cpp:501] detection_eval = 0.164706
+I0512 11:23:20.294006   498 caffe.cpp:501] detection_eval = 0.835294
+I0512 11:23:20.294013   498 caffe.cpp:501] detection_eval = 0.0823529
+I0512 11:23:20.294019   498 caffe.cpp:501] detection_eval = 2.11765
+I0512 11:23:20.294025   498 caffe.cpp:501] detection_eval = 0.181357
+I0512 11:23:20.294034   498 caffe.cpp:501] detection_eval = 0.235294
+I0512 11:23:20.294039   498 caffe.cpp:501] detection_eval = 0.764706
+I0512 11:23:20.294046   498 caffe.cpp:501] detection_eval = 0.188235
+I0512 11:23:20.294052   498 caffe.cpp:501] detection_eval = 2.08235
+I0512 11:23:20.294060   498 caffe.cpp:501] detection_eval = 0.213898
+I0512 11:23:20.294066   498 caffe.cpp:501] detection_eval = 0.282353
+I0512 11:23:20.294073   498 caffe.cpp:501] detection_eval = 0.717647
+I0512 11:23:20.294082   498 caffe.cpp:501] detection_eval = 0.270588
+I0512 11:23:20.294088   498 caffe.cpp:501] detection_eval = 2.16471
+I0512 11:23:20.294096   498 caffe.cpp:501] detection_eval = 0.258027
+I0512 11:23:20.294101   498 caffe.cpp:501] detection_eval = 0.352941
+I0512 11:23:20.294109   498 caffe.cpp:501] detection_eval = 0.647059
+I0512 11:23:20.294117   498 caffe.cpp:501] detection_eval = 0.352941
+I0512 11:23:20.294123   498 caffe.cpp:501] detection_eval = 2.15294
+I0512 11:23:20.294131   498 caffe.cpp:501] detection_eval = 0.228451
+I0512 11:23:20.294137   498 caffe.cpp:501] detection_eval = 0.317647
+I0512 11:23:20.294144   498 caffe.cpp:501] detection_eval = 0.682353
+I0512 11:23:20.294152   498 caffe.cpp:501] detection_eval = 0.458824
+I0512 11:23:20.294158   498 caffe.cpp:501] detection_eval = 2.07059
+I0512 11:23:20.294173   498 caffe.cpp:501] detection_eval = 0.184585
+I0512 11:23:20.294180   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.294186   498 caffe.cpp:501] detection_eval = 0.741176
+I0512 11:23:20.294193   498 caffe.cpp:501] detection_eval = 0.564706
+I0512 11:23:20.294198   498 caffe.cpp:501] detection_eval = 2
+I0512 11:23:20.294209   498 caffe.cpp:501] detection_eval = 0.184007
+I0512 11:23:20.294219   498 caffe.cpp:501] detection_eval = 0.247059
+I0512 11:23:20.294229   498 caffe.cpp:501] detection_eval = 0.752941
+I0512 11:23:20.294235   498 caffe.cpp:501] detection_eval = 0.670588
+I0512 11:23:20.294242   498 caffe.cpp:501] detection_eval = 1.94118
+I0512 11:23:20.294256   498 caffe.cpp:501] detection_eval = 0.204253
+I0512 11:23:20.294263   498 caffe.cpp:501] detection_eval = 0.282353
+I0512 11:23:20.294270   498 caffe.cpp:501] detection_eval = 0.717647
+I0512 11:23:20.294277   498 caffe.cpp:501] detection_eval = 0.729412
+I0512 11:23:20.294286   498 caffe.cpp:501] detection_eval = 1.96471
+I0512 11:23:20.294292   498 caffe.cpp:501] detection_eval = 0.166235
+I0512 11:23:20.294301   498 caffe.cpp:501] detection_eval = 0.247059
+I0512 11:23:20.294307   498 caffe.cpp:501] detection_eval = 0.752941
+I0512 11:23:20.294320   498 caffe.cpp:501] detection_eval = 0.776471
+I0512 11:23:20.294327   498 caffe.cpp:501] detection_eval = 1.98824
+I0512 11:23:20.294333   498 caffe.cpp:501] detection_eval = 0.0971925
+I0512 11:23:20.294339   498 caffe.cpp:501] detection_eval = 0.141176
+I0512 11:23:20.294349   498 caffe.cpp:501] detection_eval = 0.858824
+I0512 11:23:20.294361   498 caffe.cpp:501] detection_eval = 0.847059
+I0512 11:23:20.294373   498 caffe.cpp:501] detection_eval = 1.98824
+I0512 11:23:20.294384   498 caffe.cpp:501] detection_eval = 0.147233
+I0512 11:23:20.294394   498 caffe.cpp:501] detection_eval = 0.152941
+I0512 11:23:20.294400   498 caffe.cpp:501] detection_eval = 0.847059
+I0512 11:23:20.294404   498 caffe.cpp:501] detection_eval = 0.929412
+I0512 11:23:20.294410   498 caffe.cpp:501] detection_eval = 1.98824
+I0512 11:23:20.294420   498 caffe.cpp:501] detection_eval = 0.158309
+I0512 11:23:20.294427   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.294433   498 caffe.cpp:501] detection_eval = 0.788235
+I0512 11:23:20.294441   498 caffe.cpp:501] detection_eval = 1.04706
+I0512 11:23:20.294446   498 caffe.cpp:501] detection_eval = 1.94118
+I0512 11:23:20.294453   498 caffe.cpp:501] detection_eval = 0.216051
+I0512 11:23:20.294459   498 caffe.cpp:501] detection_eval = 0.294118
+I0512 11:23:20.294484   498 caffe.cpp:501] detection_eval = 0.705882
+I0512 11:23:20.294497   498 caffe.cpp:501] detection_eval = 1.08235
+I0512 11:23:20.294502   498 caffe.cpp:501] detection_eval = 2
+I0512 11:23:20.294508   498 caffe.cpp:501] detection_eval = 0.181983
+I0512 11:23:20.294513   498 caffe.cpp:501] detection_eval = 0.305882
+I0512 11:23:20.294518   498 caffe.cpp:501] detection_eval = 0.694118
+I0512 11:23:20.294526   498 caffe.cpp:501] detection_eval = 1.14118
+I0512 11:23:20.294533   498 caffe.cpp:501] detection_eval = 1.98824
+I0512 11:23:20.294539   498 caffe.cpp:501] detection_eval = 0.105867
+I0512 11:23:20.294544   498 caffe.cpp:501] detection_eval = 0.152941
+I0512 11:23:20.294550   498 caffe.cpp:501] detection_eval = 0.847059
+I0512 11:23:20.294555   498 caffe.cpp:501] detection_eval = 1.22353
+I0512 11:23:20.294562   498 caffe.cpp:501] detection_eval = 2.04706
+I0512 11:23:20.294569   498 caffe.cpp:501] detection_eval = 0.19379
+I0512 11:23:20.294576   498 caffe.cpp:501] detection_eval = 0.223529
+I0512 11:23:20.294582   498 caffe.cpp:501] detection_eval = 0.776471
+I0512 11:23:20.294589   498 caffe.cpp:501] detection_eval = 1.29412
+I0512 11:23:20.294595   498 caffe.cpp:501] detection_eval = 2.05882
+I0512 11:23:20.294603   498 caffe.cpp:501] detection_eval = 0.201463
+I0512 11:23:20.294612   498 caffe.cpp:501] detection_eval = 0.270588
+I0512 11:23:20.294618   498 caffe.cpp:501] detection_eval = 0.729412
+I0512 11:23:20.294625   498 caffe.cpp:501] detection_eval = 1.36471
+I0512 11:23:20.294632   498 caffe.cpp:501] detection_eval = 2.02353
+I0512 11:23:20.294647   498 caffe.cpp:501] detection_eval = 0.18475
+I0512 11:23:20.294654   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.294661   498 caffe.cpp:501] detection_eval = 0.788235
+I0512 11:23:20.294667   498 caffe.cpp:501] detection_eval = 1.43529
+I0512 11:23:20.294675   498 caffe.cpp:501] detection_eval = 1.97647
+I0512 11:23:20.294683   498 caffe.cpp:501] detection_eval = 0.102636
+I0512 11:23:20.294689   498 caffe.cpp:501] detection_eval = 0.152941
+I0512 11:23:20.294697   498 caffe.cpp:501] detection_eval = 0.847059
+I0512 11:23:20.294703   498 caffe.cpp:501] detection_eval = 1.54118
+I0512 11:23:20.294710   498 caffe.cpp:501] detection_eval = 2.01176
+I0512 11:23:20.294715   498 caffe.cpp:501] detection_eval = 0.172987
+I0512 11:23:20.294723   498 caffe.cpp:501] detection_eval = 0.2
+I0512 11:23:20.294732   498 caffe.cpp:501] detection_eval = 0.8
+I0512 11:23:20.294737   498 caffe.cpp:501] detection_eval = 1.63529
+I0512 11:23:20.294744   498 caffe.cpp:501] detection_eval = 1.98824
+I0512 11:23:20.294750   498 caffe.cpp:501] detection_eval = 0.228308
+I0512 11:23:20.294755   498 caffe.cpp:501] detection_eval = 0.305882
+I0512 11:23:20.294762   498 caffe.cpp:501] detection_eval = 0.694118
+I0512 11:23:20.294768   498 caffe.cpp:501] detection_eval = 1.72941
+I0512 11:23:20.294776   498 caffe.cpp:501] detection_eval = 1.89412
+I0512 11:23:20.294782   498 caffe.cpp:501] detection_eval = 0.144654
+I0512 11:23:20.294788   498 caffe.cpp:501] detection_eval = 0.223529
+I0512 11:23:20.294795   498 caffe.cpp:501] detection_eval = 0.776471
+I0512 11:23:20.294800   498 caffe.cpp:501] detection_eval = 1.78824
+I0512 11:23:20.294806   498 caffe.cpp:501] detection_eval = 1.91765
+I0512 11:23:20.294811   498 caffe.cpp:501] detection_eval = 0.116691
+I0512 11:23:20.294819   498 caffe.cpp:501] detection_eval = 0.129412
+I0512 11:23:20.294826   498 caffe.cpp:501] detection_eval = 0.870588
+I0512 11:23:20.294832   498 caffe.cpp:501] detection_eval = 1.83529
+I0512 11:23:20.294837   498 caffe.cpp:501] detection_eval = 1.97647
+I0512 11:23:20.294844   498 caffe.cpp:501] detection_eval = 0.172978
+I0512 11:23:20.294849   498 caffe.cpp:501] detection_eval = 0.235294
+I0512 11:23:20.294857   498 caffe.cpp:501] detection_eval = 0.764706
+I0512 11:23:20.294862   498 caffe.cpp:501] detection_eval = 1.89412
+I0512 11:23:20.294868   498 caffe.cpp:501] detection_eval = 2
+I0512 11:23:20.294878   498 caffe.cpp:501] detection_eval = 0.163564
+I0512 11:23:20.294883   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.294889   498 caffe.cpp:501] detection_eval = 0.788235
+I0512 11:23:20.294895   498 caffe.cpp:501] detection_eval = 1.96471
+I0512 11:23:20.294901   498 caffe.cpp:501] detection_eval = 1.94118
+I0512 11:23:20.294905   498 caffe.cpp:501] detection_eval = 0.146315
+I0512 11:23:20.294912   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.294919   498 caffe.cpp:501] detection_eval = 0.788235
+I0512 11:23:20.294925   498 caffe.cpp:501] detection_eval = 1.98824
+I0512 11:23:20.294930   498 caffe.cpp:501] detection_eval = 2.02353
+I0512 11:23:20.294937   498 caffe.cpp:501] detection_eval = 0.131982
+I0512 11:23:20.294943   498 caffe.cpp:501] detection_eval = 0.188235
+I0512 11:23:20.294950   498 caffe.cpp:501] detection_eval = 0.811765
+I0512 11:23:20.294955   498 caffe.cpp:501] detection_eval = 2.05882
+I0512 11:23:20.294961   498 caffe.cpp:501] detection_eval = 2
+I0512 11:23:20.294967   498 caffe.cpp:501] detection_eval = 0.125215
+I0512 11:23:20.294975   498 caffe.cpp:501] detection_eval = 0.141176
+I0512 11:23:20.294981   498 caffe.cpp:501] detection_eval = 0.858824
+I0512 11:23:20.294987   498 caffe.cpp:501] detection_eval = 2.12941
+I0512 11:23:20.294993   498 caffe.cpp:501] detection_eval = 2.09412
+I0512 11:23:20.294999   498 caffe.cpp:501] detection_eval = 0.180842
+I0512 11:23:20.295004   498 caffe.cpp:501] detection_eval = 0.2
+I0512 11:23:20.295011   498 caffe.cpp:501] detection_eval = 0.8
+I0512 11:23:20.295017   498 caffe.cpp:501] detection_eval = 2.17647
+I0512 11:23:20.295022   498 caffe.cpp:501] detection_eval = 2.10588
+I0512 11:23:20.295035   498 caffe.cpp:501] detection_eval = 0.167863
+I0512 11:23:20.295043   498 caffe.cpp:501] detection_eval = 0.2
+I0512 11:23:20.295048   498 caffe.cpp:501] detection_eval = 0.8
+I0512 11:23:20.295055   498 caffe.cpp:501] detection_eval = 2.24706
+I0512 11:23:20.295061   498 caffe.cpp:501] detection_eval = 2.07059
+I0512 11:23:20.295068   498 caffe.cpp:501] detection_eval = 0.135387
+I0512 11:23:20.295074   498 caffe.cpp:501] detection_eval = 0.164706
+I0512 11:23:20.295081   498 caffe.cpp:501] detection_eval = 0.835294
+I0512 11:23:20.295086   498 caffe.cpp:501] detection_eval = 2.34118
+I0512 11:23:20.295090   498 caffe.cpp:501] detection_eval = 1.96471
+I0512 11:23:20.295095   498 caffe.cpp:501] detection_eval = 0.125435
+I0512 11:23:20.295102   498 caffe.cpp:501] detection_eval = 0.176471
+I0512 11:23:20.295107   498 caffe.cpp:501] detection_eval = 0.823529
+I0512 11:23:20.295112   498 caffe.cpp:501] detection_eval = 2.38824
+I0512 11:23:20.295120   498 caffe.cpp:501] detection_eval = 2.03529
+I0512 11:23:20.295125   498 caffe.cpp:501] detection_eval = 0.157741
+I0512 11:23:20.295131   498 caffe.cpp:501] detection_eval = 0.176471
+I0512 11:23:20.295137   498 caffe.cpp:501] detection_eval = 0.823529
+I0512 11:23:20.295145   498 caffe.cpp:501] detection_eval = 2.48235
+I0512 11:23:20.295150   498 caffe.cpp:501] detection_eval = 2.01176
+I0512 11:23:20.295156   498 caffe.cpp:501] detection_eval = 0.172442
+I0512 11:23:20.295162   498 caffe.cpp:501] detection_eval = 0.247059
+I0512 11:23:20.295169   498 caffe.cpp:501] detection_eval = 0.752941
+I0512 11:23:20.295177   498 caffe.cpp:501] detection_eval = 2.55294
+I0512 11:23:20.295183   498 caffe.cpp:501] detection_eval = 2
+I0512 11:23:20.295188   498 caffe.cpp:501] detection_eval = 0.159328
+I0512 11:23:20.295195   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.295204   498 caffe.cpp:501] detection_eval = 0.788235
+I0512 11:23:20.295209   498 caffe.cpp:501] detection_eval = 2.64706
+I0512 11:23:20.295212   498 caffe.cpp:501] detection_eval = 1.94118
+I0512 11:23:20.295217   498 caffe.cpp:501] detection_eval = 0.166562
+I0512 11:23:20.295220   498 caffe.cpp:501] detection_eval = 0.223529
+I0512 11:23:20.295223   498 caffe.cpp:501] detection_eval = 0.776471
+I0512 11:23:20.295228   498 caffe.cpp:501] detection_eval = 2.70588
+I0512 11:23:20.295231   498 caffe.cpp:501] detection_eval = 1.97647
+I0512 11:23:20.295234   498 caffe.cpp:501] detection_eval = 0.17705
+I0512 11:23:20.295238   498 caffe.cpp:501] detection_eval = 0.223529
+I0512 11:23:20.295243   498 caffe.cpp:501] detection_eval = 0.776471
+I0512 11:23:20.295245   498 caffe.cpp:501] detection_eval = 2.72941
+I0512 11:23:20.295249   498 caffe.cpp:501] detection_eval = 2.11765
+I0512 11:23:20.295253   498 caffe.cpp:501] detection_eval = 0.180486
+I0512 11:23:20.295261   498 caffe.cpp:501] detection_eval = 0.223529
+I0512 11:23:20.295266   498 caffe.cpp:501] detection_eval = 0.776471
+I0512 11:23:20.295275   498 caffe.cpp:501] detection_eval = 2.82353
+I0512 11:23:20.295280   498 caffe.cpp:501] detection_eval = 2
+I0512 11:23:20.295287   498 caffe.cpp:501] detection_eval = 0.153229
+I0512 11:23:20.295294   498 caffe.cpp:501] detection_eval = 0.2
+I0512 11:23:20.295301   498 caffe.cpp:501] detection_eval = 0.8
+I0512 11:23:20.295307   498 caffe.cpp:501] detection_eval = 2.90588
+I0512 11:23:20.295315   498 caffe.cpp:501] detection_eval = 2.01176
+I0512 11:23:20.295320   498 caffe.cpp:501] detection_eval = 0.151423
+I0512 11:23:20.295327   498 caffe.cpp:501] detection_eval = 0.188235
+I0512 11:23:20.295333   498 caffe.cpp:501] detection_eval = 0.811765
+I0512 11:23:20.295339   498 caffe.cpp:501] detection_eval = 2.97647
+I0512 11:23:20.295343   498 caffe.cpp:501] detection_eval = 1.98824
+I0512 11:23:20.295347   498 caffe.cpp:501] detection_eval = 0.120919
+I0512 11:23:20.295351   498 caffe.cpp:501] detection_eval = 0.164706
+I0512 11:23:20.295354   498 caffe.cpp:501] detection_eval = 0.835294
+I0512 11:23:20.295358   498 caffe.cpp:501] detection_eval = 3.02353
+I0512 11:23:20.295361   498 caffe.cpp:501] detection_eval = 2.10588
+I0512 11:23:20.295370   498 caffe.cpp:501] detection_eval = 0.1429
+I0512 11:23:20.295374   498 caffe.cpp:501] detection_eval = 0.188235
+I0512 11:23:20.295378   498 caffe.cpp:501] detection_eval = 0.811765
+I0512 11:23:20.295382   498 caffe.cpp:501] detection_eval = 3.10588
+I0512 11:23:20.295385   498 caffe.cpp:501] detection_eval = 2.08235
+I0512 11:23:20.295389   498 caffe.cpp:501] detection_eval = 0.152962
+I0512 11:23:20.295393   498 caffe.cpp:501] detection_eval = 0.188235
+I0512 11:23:20.295398   498 caffe.cpp:501] detection_eval = 0.811765
+I0512 11:23:20.295405   498 caffe.cpp:501] detection_eval = 3.24706
+I0512 11:23:20.295411   498 caffe.cpp:501] detection_eval = 1.97647
+I0512 11:23:20.295416   498 caffe.cpp:501] detection_eval = 0.198546
+I0512 11:23:20.295423   498 caffe.cpp:501] detection_eval = 0.247059
+I0512 11:23:20.295428   498 caffe.cpp:501] detection_eval = 0.752941
+I0512 11:23:20.295433   498 caffe.cpp:501] detection_eval = 3.28235
+I0512 11:23:20.295440   498 caffe.cpp:501] detection_eval = 2.09412
+I0512 11:23:20.295445   498 caffe.cpp:501] detection_eval = 0.192733
+I0512 11:23:20.295454   498 caffe.cpp:501] detection_eval = 0.270588
+I0512 11:23:20.295459   498 caffe.cpp:501] detection_eval = 0.729412
+I0512 11:23:20.295466   498 caffe.cpp:501] detection_eval = 3.38824
+I0512 11:23:20.295472   498 caffe.cpp:501] detection_eval = 2.01176
+I0512 11:23:20.295480   498 caffe.cpp:501] detection_eval = 0.199864
+I0512 11:23:20.295485   498 caffe.cpp:501] detection_eval = 0.282353
+I0512 11:23:20.295491   498 caffe.cpp:501] detection_eval = 0.717647
+I0512 11:23:20.295497   498 caffe.cpp:501] detection_eval = 3.41176
+I0512 11:23:20.295503   498 caffe.cpp:501] detection_eval = 2.07059
+I0512 11:23:20.295507   498 caffe.cpp:501] detection_eval = 0.148228
+I0512 11:23:20.295511   498 caffe.cpp:501] detection_eval = 0.2
+I0512 11:23:20.295517   498 caffe.cpp:501] detection_eval = 0.8
+I0512 11:23:20.295524   498 caffe.cpp:501] detection_eval = 3.50588
+I0512 11:23:20.295531   498 caffe.cpp:501] detection_eval = 1.96471
+I0512 11:23:20.295537   498 caffe.cpp:501] detection_eval = 0.0952197
+I0512 11:23:20.295547   498 caffe.cpp:501] detection_eval = 0.152941
+I0512 11:23:20.295552   498 caffe.cpp:501] detection_eval = 0.847059
+I0512 11:23:20.295557   498 caffe.cpp:501] detection_eval = 3.6
+I0512 11:23:20.295562   498 caffe.cpp:501] detection_eval = 1.90588
+I0512 11:23:20.295568   498 caffe.cpp:501] detection_eval = 0.165517
+I0512 11:23:20.295573   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.295580   498 caffe.cpp:501] detection_eval = 0.788235
+I0512 11:23:20.295586   498 caffe.cpp:501] detection_eval = 3.64706
+I0512 11:23:20.295593   498 caffe.cpp:501] detection_eval = 1.96471
+I0512 11:23:20.295599   498 caffe.cpp:501] detection_eval = 0.191164
+I0512 11:23:20.295605   498 caffe.cpp:501] detection_eval = 0.235294
+I0512 11:23:20.295612   498 caffe.cpp:501] detection_eval = 0.764706
+I0512 11:23:20.295619   498 caffe.cpp:501] detection_eval = 3.70588
+I0512 11:23:20.295626   498 caffe.cpp:501] detection_eval = 1.94118
+I0512 11:23:20.295632   498 caffe.cpp:501] detection_eval = 0.16917
+I0512 11:23:20.295640   498 caffe.cpp:501] detection_eval = 0.188235
+I0512 11:23:20.295646   498 caffe.cpp:501] detection_eval = 0.811765
+I0512 11:23:20.295655   498 caffe.cpp:501] detection_eval = 3.75294
+I0512 11:23:20.295660   498 caffe.cpp:501] detection_eval = 2.03529
+I0512 11:23:20.295666   498 caffe.cpp:501] detection_eval = 0.146294
+I0512 11:23:20.295672   498 caffe.cpp:501] detection_eval = 0.176471
+I0512 11:23:20.295680   498 caffe.cpp:501] detection_eval = 0.823529
+I0512 11:23:20.295686   498 caffe.cpp:501] detection_eval = 3.78824
+I0512 11:23:20.295693   498 caffe.cpp:501] detection_eval = 2.14118
+I0512 11:23:20.295701   498 caffe.cpp:501] detection_eval = 0.13518
+I0512 11:23:20.295707   498 caffe.cpp:501] detection_eval = 0.129412
+I0512 11:23:20.295716   498 caffe.cpp:501] detection_eval = 0.870588
+I0512 11:23:20.295723   498 caffe.cpp:501] detection_eval = 3.91765
+I0512 11:23:20.295729   498 caffe.cpp:501] detection_eval = 2.03529
+I0512 11:23:20.295742   498 caffe.cpp:501] detection_eval = 0.179725
+I0512 11:23:20.295747   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.295751   498 caffe.cpp:501] detection_eval = 0.788235
+I0512 11:23:20.295758   498 caffe.cpp:501] detection_eval = 4
+I0512 11:23:20.295764   498 caffe.cpp:501] detection_eval = 2.01176
+I0512 11:23:20.295771   498 caffe.cpp:501] detection_eval = 0.196782
+I0512 11:23:20.295778   498 caffe.cpp:501] detection_eval = 0.270588
+I0512 11:23:20.295784   498 caffe.cpp:501] detection_eval = 0.729412
+I0512 11:23:20.295792   498 caffe.cpp:501] detection_eval = 4.05882
+I0512 11:23:20.295796   498 caffe.cpp:501] detection_eval = 2.07059
+I0512 11:23:20.295799   498 caffe.cpp:501] detection_eval = 0.196125
+I0512 11:23:20.295804   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.295811   498 caffe.cpp:501] detection_eval = 0.741176
+I0512 11:23:20.295817   498 caffe.cpp:501] detection_eval = 4.10588
+I0512 11:23:20.295822   498 caffe.cpp:501] detection_eval = 2.10588
+I0512 11:23:20.295827   498 caffe.cpp:501] detection_eval = 0.192171
+I0512 11:23:20.295835   498 caffe.cpp:501] detection_eval = 0.270588
+I0512 11:23:20.295840   498 caffe.cpp:501] detection_eval = 0.729412
+I0512 11:23:20.295847   498 caffe.cpp:501] detection_eval = 4.21176
+I0512 11:23:20.295855   498 caffe.cpp:501] detection_eval = 2.04706
+I0512 11:23:20.295861   498 caffe.cpp:501] detection_eval = 0.175469
+I0512 11:23:20.295867   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.295872   498 caffe.cpp:501] detection_eval = 0.788235
+I0512 11:23:20.295879   498 caffe.cpp:501] detection_eval = 4.29412
+I0512 11:23:20.295886   498 caffe.cpp:501] detection_eval = 2.09412
+I0512 11:23:20.295892   498 caffe.cpp:501] detection_eval = 0.179329
+I0512 11:23:20.295900   498 caffe.cpp:501] detection_eval = 0.2
+I0512 11:23:20.295907   498 caffe.cpp:501] detection_eval = 0.8
+I0512 11:23:20.295913   498 caffe.cpp:501] detection_eval = 4.41176
+I0512 11:23:20.295918   498 caffe.cpp:501] detection_eval = 2.01176
+I0512 11:23:20.295925   498 caffe.cpp:501] detection_eval = 0.223788
+I0512 11:23:20.295933   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.295941   498 caffe.cpp:501] detection_eval = 0.741176
+I0512 11:23:20.295946   498 caffe.cpp:501] detection_eval = 4.45882
+I0512 11:23:20.295954   498 caffe.cpp:501] detection_eval = 2.02353
+I0512 11:23:20.295959   498 caffe.cpp:501] detection_eval = 0.19348
+I0512 11:23:20.295967   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.295974   498 caffe.cpp:501] detection_eval = 0.741176
+I0512 11:23:20.295981   498 caffe.cpp:501] detection_eval = 4.56471
+I0512 11:23:20.295987   498 caffe.cpp:501] detection_eval = 1.98824
+I0512 11:23:20.295994   498 caffe.cpp:501] detection_eval = 0.161602
+I0512 11:23:20.296005   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.296011   498 caffe.cpp:501] detection_eval = 0.788235
+I0512 11:23:20.296017   498 caffe.cpp:501] detection_eval = 4.6
+I0512 11:23:20.296022   498 caffe.cpp:501] detection_eval = 2.09412
+I0512 11:23:20.296028   498 caffe.cpp:501] detection_eval = 0.159581
+I0512 11:23:20.296053   498 caffe.cpp:501] detection_eval = 0.188235
+I0512 11:23:20.296062   498 caffe.cpp:501] detection_eval = 0.811765
+I0512 11:23:20.296068   498 caffe.cpp:501] detection_eval = 4.69412
+I0512 11:23:20.296077   498 caffe.cpp:501] detection_eval = 2.03529
+I0512 11:23:20.296084   498 caffe.cpp:501] detection_eval = 0.168702
+I0512 11:23:20.296092   498 caffe.cpp:501] detection_eval = 0.2
+I0512 11:23:20.296097   498 caffe.cpp:501] detection_eval = 0.8
+I0512 11:23:20.296104   498 caffe.cpp:501] detection_eval = 4.77647
+I0512 11:23:20.296111   498 caffe.cpp:501] detection_eval = 1.97647
+I0512 11:23:20.296135   498 caffe.cpp:501] detection_eval = 0.130514
+I0512 11:23:20.296146   498 caffe.cpp:501] detection_eval = 0.188235
+I0512 11:23:20.296152   498 caffe.cpp:501] detection_eval = 0.811765
+I0512 11:23:20.296159   498 caffe.cpp:501] detection_eval = 4.88235
+I0512 11:23:20.296166   498 caffe.cpp:501] detection_eval = 1.96471
+I0512 11:23:20.296180   498 caffe.cpp:501] detection_eval = 0.208998
+I0512 11:23:20.296185   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.296195   498 caffe.cpp:501] detection_eval = 0.741176
+I0512 11:23:20.296200   498 caffe.cpp:501] detection_eval = 4.94118
+I0512 11:23:20.296206   498 caffe.cpp:501] detection_eval = 1.97647
+I0512 11:23:20.296212   498 caffe.cpp:501] detection_eval = 0.214204
+I0512 11:23:20.296219   498 caffe.cpp:501] detection_eval = 0.329412
+I0512 11:23:20.296226   498 caffe.cpp:501] detection_eval = 0.670588
+I0512 11:23:20.296232   498 caffe.cpp:501] detection_eval = 5.02353
+I0512 11:23:20.296238   498 caffe.cpp:501] detection_eval = 1.98824
+I0512 11:23:20.296244   498 caffe.cpp:501] detection_eval = 0.175881
+I0512 11:23:20.296252   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.296260   498 caffe.cpp:501] detection_eval = 0.741176
+I0512 11:23:20.296267   498 caffe.cpp:501] detection_eval = 5.07059
+I0512 11:23:20.296274   498 caffe.cpp:501] detection_eval = 2.05882
+I0512 11:23:20.296283   498 caffe.cpp:501] detection_eval = 0.15614
+I0512 11:23:20.296290   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.296299   498 caffe.cpp:501] detection_eval = 0.788235
+I0512 11:23:20.296305   498 caffe.cpp:501] detection_eval = 5.15294
+I0512 11:23:20.296311   498 caffe.cpp:501] detection_eval = 2.01176
+I0512 11:23:20.296319   498 caffe.cpp:501] detection_eval = 0.168125
+I0512 11:23:20.296325   498 caffe.cpp:501] detection_eval = 0.2
+I0512 11:23:20.296332   498 caffe.cpp:501] detection_eval = 0.8
+I0512 11:23:20.296339   498 caffe.cpp:501] detection_eval = 5.25882
+I0512 11:23:20.296344   498 caffe.cpp:501] detection_eval = 2.03529
+I0512 11:23:20.296350   498 caffe.cpp:501] detection_eval = 0.24437
+I0512 11:23:20.296360   498 caffe.cpp:501] detection_eval = 0.294118
+I0512 11:23:20.296368   498 caffe.cpp:501] detection_eval = 0.705882
+I0512 11:23:20.296375   498 caffe.cpp:501] detection_eval = 5.30588
+I0512 11:23:20.296380   498 caffe.cpp:501] detection_eval = 2.08235
+I0512 11:23:20.296386   498 caffe.cpp:501] detection_eval = 0.165026
+I0512 11:23:20.296391   498 caffe.cpp:501] detection_eval = 0.247059
+I0512 11:23:20.296398   498 caffe.cpp:501] detection_eval = 0.752941
+I0512 11:23:20.296404   498 caffe.cpp:501] detection_eval = 5.41176
+I0512 11:23:20.296413   498 caffe.cpp:501] detection_eval = 2.01176
+I0512 11:23:20.296418   498 caffe.cpp:501] detection_eval = 0.145657
+I0512 11:23:20.296424   498 caffe.cpp:501] detection_eval = 0.176471
+I0512 11:23:20.296428   498 caffe.cpp:501] detection_eval = 0.823529
+I0512 11:23:20.296432   498 caffe.cpp:501] detection_eval = 5.50588
+I0512 11:23:20.296437   498 caffe.cpp:501] detection_eval = 1.96471
+I0512 11:23:20.296442   498 caffe.cpp:501] detection_eval = 0.183287
+I0512 11:23:20.296448   498 caffe.cpp:501] detection_eval = 0.235294
+I0512 11:23:20.296455   498 caffe.cpp:501] detection_eval = 0.764706
+I0512 11:23:20.296461   498 caffe.cpp:501] detection_eval = 5.56471
+I0512 11:23:20.296483   498 caffe.cpp:501] detection_eval = 1.98824
+I0512 11:23:20.296494   498 caffe.cpp:501] detection_eval = 0.191452
+I0512 11:23:20.296500   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.296506   498 caffe.cpp:501] detection_eval = 0.741176
+I0512 11:23:20.296514   498 caffe.cpp:501] detection_eval = 5.58824
+I0512 11:23:20.296520   498 caffe.cpp:501] detection_eval = 2.12941
+I0512 11:23:20.296530   498 caffe.cpp:501] detection_eval = 0.189463
+I0512 11:23:20.296535   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.296540   498 caffe.cpp:501] detection_eval = 0.741176
+I0512 11:23:20.296546   498 caffe.cpp:501] detection_eval = 5.69412
+I0512 11:23:20.296555   498 caffe.cpp:501] detection_eval = 2.08235
+I0512 11:23:20.296561   498 caffe.cpp:501] detection_eval = 0.182659
+I0512 11:23:20.296567   498 caffe.cpp:501] detection_eval = 0.235294
+I0512 11:23:20.296573   498 caffe.cpp:501] detection_eval = 0.764706
+I0512 11:23:20.296581   498 caffe.cpp:501] detection_eval = 5.78824
+I0512 11:23:20.296587   498 caffe.cpp:501] detection_eval = 2.08235
+I0512 11:23:20.296603   498 caffe.cpp:501] detection_eval = 0.205268
+I0512 11:23:20.296612   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.296622   498 caffe.cpp:501] detection_eval = 0.741176
+I0512 11:23:20.296629   498 caffe.cpp:501] detection_eval = 5.87059
+I0512 11:23:20.296635   498 caffe.cpp:501] detection_eval = 2.02353
+I0512 11:23:20.296643   498 caffe.cpp:501] detection_eval = 0.181426
+I0512 11:23:20.296648   498 caffe.cpp:501] detection_eval = 0.188235
+I0512 11:23:20.296656   498 caffe.cpp:501] detection_eval = 0.811765
+I0512 11:23:20.296663   498 caffe.cpp:501] detection_eval = 5.94118
+I0512 11:23:20.296667   498 caffe.cpp:501] detection_eval = 2.09412
+I0512 11:23:20.296676   498 caffe.cpp:501] detection_eval = 0.153337
+I0512 11:23:20.296684   498 caffe.cpp:501] detection_eval = 0.2
+I0512 11:23:20.296690   498 caffe.cpp:501] detection_eval = 0.8
+I0512 11:23:20.296697   498 caffe.cpp:501] detection_eval = 5.98824
+I0512 11:23:20.296705   498 caffe.cpp:501] detection_eval = 2.12941
+I0512 11:23:20.296711   498 caffe.cpp:501] detection_eval = 0.188909
+I0512 11:23:20.296718   498 caffe.cpp:501] detection_eval = 0.235294
+I0512 11:23:20.296725   498 caffe.cpp:501] detection_eval = 0.764706
+I0512 11:23:20.296733   498 caffe.cpp:501] detection_eval = 6.08235
+I0512 11:23:20.296741   498 caffe.cpp:501] detection_eval = 2.07059
+I0512 11:23:20.296749   498 caffe.cpp:501] detection_eval = 0.17706
+I0512 11:23:20.296754   498 caffe.cpp:501] detection_eval = 0.223529
+I0512 11:23:20.296761   498 caffe.cpp:501] detection_eval = 0.776471
+I0512 11:23:20.296767   498 caffe.cpp:501] detection_eval = 6.18824
+I0512 11:23:20.296774   498 caffe.cpp:501] detection_eval = 1.98824
+I0512 11:23:20.296782   498 caffe.cpp:501] detection_eval = 0.160543
+I0512 11:23:20.296790   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.296797   498 caffe.cpp:501] detection_eval = 0.741176
+I0512 11:23:20.296804   498 caffe.cpp:501] detection_eval = 6.23529
+I0512 11:23:20.296809   498 caffe.cpp:501] detection_eval = 2.03529
+I0512 11:23:20.296816   498 caffe.cpp:501] detection_eval = 0.158492
+I0512 11:23:20.296821   498 caffe.cpp:501] detection_eval = 0.2
+I0512 11:23:20.296829   498 caffe.cpp:501] detection_eval = 0.8
+I0512 11:23:20.296836   498 caffe.cpp:501] detection_eval = 6.30588
+I0512 11:23:20.296844   498 caffe.cpp:501] detection_eval = 2.08235
+I0512 11:23:20.296849   498 caffe.cpp:501] detection_eval = 0.168707
+I0512 11:23:20.296854   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.296861   498 caffe.cpp:501] detection_eval = 0.788235
+I0512 11:23:20.296865   498 caffe.cpp:501] detection_eval = 6.37647
+I0512 11:23:20.296869   498 caffe.cpp:501] detection_eval = 2.07059
+I0512 11:23:20.296874   498 caffe.cpp:501] detection_eval = 0.172355
+I0512 11:23:20.296881   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.296890   498 caffe.cpp:501] detection_eval = 0.741176
+I0512 11:23:20.296900   498 caffe.cpp:501] detection_eval = 6.47059
+I0512 11:23:20.296908   498 caffe.cpp:501] detection_eval = 2.04706
+I0512 11:23:20.296914   498 caffe.cpp:501] detection_eval = 0.189963
+I0512 11:23:20.296921   498 caffe.cpp:501] detection_eval = 0.223529
+I0512 11:23:20.296927   498 caffe.cpp:501] detection_eval = 0.776471
+I0512 11:23:20.296933   498 caffe.cpp:501] detection_eval = 6.42353
+I0512 11:23:20.296942   498 caffe.cpp:501] detection_eval = 2.02353
+I0512 11:23:20.296954   498 caffe.cpp:501] detection_eval = 0.180246
+I0512 11:23:20.296968   498 caffe.cpp:501] detection_eval = 0.235294
+I0512 11:23:20.296978   498 caffe.cpp:501] detection_eval = 0.752941
+I0512 11:23:20.296985   498 caffe.cpp:501] detection_eval = 6.55294
+I0512 11:23:20.296991   498 caffe.cpp:501] detection_eval = 1.98824
+I0512 11:23:20.297000   498 caffe.cpp:501] detection_eval = 0.237308
+I0512 11:23:20.297005   498 caffe.cpp:501] detection_eval = 0.341176
+I0512 11:23:20.297009   498 caffe.cpp:501] detection_eval = 0.647059
+I0512 11:23:20.297019   498 caffe.cpp:501] detection_eval = 6.61176
+I0512 11:23:20.297029   498 caffe.cpp:501] detection_eval = 2.01176
+I0512 11:23:20.297044   498 caffe.cpp:501] detection_eval = 0.230327
+I0512 11:23:20.297052   498 caffe.cpp:501] detection_eval = 0.305882
+I0512 11:23:20.297062   498 caffe.cpp:501] detection_eval = 0.682353
+I0512 11:23:20.297066   498 caffe.cpp:501] detection_eval = 6.72941
+I0512 11:23:20.297070   498 caffe.cpp:501] detection_eval = 1.97647
+I0512 11:23:20.297073   498 caffe.cpp:501] detection_eval = 0.202374
+I0512 11:23:20.297077   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.297083   498 caffe.cpp:501] detection_eval = 0.729412
+I0512 11:23:20.297087   498 caffe.cpp:501] detection_eval = 6.8
+I0512 11:23:20.297091   498 caffe.cpp:501] detection_eval = 1.96471
+I0512 11:23:20.297096   498 caffe.cpp:501] detection_eval = 0.167974
+I0512 11:23:20.297101   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.297106   498 caffe.cpp:501] detection_eval = 0.729412
+I0512 11:23:20.297113   498 caffe.cpp:501] detection_eval = 6.87059
+I0512 11:23:20.297118   498 caffe.cpp:501] detection_eval = 1.94118
+I0512 11:23:20.297123   498 caffe.cpp:501] detection_eval = 0.115826
+I0512 11:23:20.297130   498 caffe.cpp:501] detection_eval = 0.164706
+I0512 11:23:20.297137   498 caffe.cpp:501] detection_eval = 0.823529
+I0512 11:23:20.297144   498 caffe.cpp:501] detection_eval = 6.82353
+I0512 11:23:20.297150   498 caffe.cpp:501] detection_eval = 1.96471
+I0512 11:23:20.297156   498 caffe.cpp:501] detection_eval = 0.167547
+I0512 11:23:20.297163   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.297169   498 caffe.cpp:501] detection_eval = 0.764706
+I0512 11:23:20.297178   498 caffe.cpp:501] detection_eval = 6.91765
+I0512 11:23:20.297183   498 caffe.cpp:501] detection_eval = 1.98824
+I0512 11:23:20.297189   498 caffe.cpp:501] detection_eval = 0.195566
+I0512 11:23:20.297195   498 caffe.cpp:501] detection_eval = 0.258824
+I0512 11:23:20.297200   498 caffe.cpp:501] detection_eval = 0.717647
+I0512 11:23:20.297204   498 caffe.cpp:501] detection_eval = 6.98824
+I0512 11:23:20.297212   498 caffe.cpp:501] detection_eval = 2
+I0512 11:23:20.297219   498 caffe.cpp:501] detection_eval = 0.140525
+I0512 11:23:20.297224   498 caffe.cpp:501] detection_eval = 0.176471
+I0512 11:23:20.297232   498 caffe.cpp:501] detection_eval = 0.8
+I0512 11:23:20.297237   498 caffe.cpp:501] detection_eval = 6.98824
+I0512 11:23:20.297245   498 caffe.cpp:501] detection_eval = 1.90588
+I0512 11:23:20.297251   498 caffe.cpp:501] detection_eval = 0.144517
+I0512 11:23:20.297257   498 caffe.cpp:501] detection_eval = 0.188235
+I0512 11:23:20.297263   498 caffe.cpp:501] detection_eval = 0.776471
+I0512 11:23:20.297269   498 caffe.cpp:501] detection_eval = 7.07059
+I0512 11:23:20.297274   498 caffe.cpp:501] detection_eval = 1.88235
+I0512 11:23:20.297282   498 caffe.cpp:501] detection_eval = 0.187301
+I0512 11:23:20.297302   498 caffe.cpp:501] detection_eval = 0.247059
+I0512 11:23:20.297307   498 caffe.cpp:501] detection_eval = 0.717647
+I0512 11:23:20.297317   498 caffe.cpp:501] detection_eval = 7.10588
+I0512 11:23:20.297322   498 caffe.cpp:501] detection_eval = 1.97647
+I0512 11:23:20.297338   498 caffe.cpp:501] detection_eval = 0.160406
+I0512 11:23:20.297344   498 caffe.cpp:501] detection_eval = 0.211765
+I0512 11:23:20.297348   498 caffe.cpp:501] detection_eval = 0.752941
+I0512 11:23:20.297353   498 caffe.cpp:501] detection_eval = 7.15294
+I0512 11:23:20.297358   498 caffe.cpp:501] detection_eval = 2.02353
+I0512 11:23:20.297363   498 caffe.cpp:501] detection_eval = 0.156009
+I0512 11:23:20.297370   498 caffe.cpp:501] detection_eval = 0.2
+I0512 11:23:20.297380   498 caffe.cpp:501] detection_eval = 0.764706
+I0512 11:23:20.297389   498 caffe.cpp:501] detection_eval = 7.11765
+I0512 11:23:20.297395   498 caffe.cpp:501] detection_eval = 2.04706
+I0512 11:23:20.297402   498 caffe.cpp:501] detection_eval = 0.195592
+I0512 11:23:20.297408   498 caffe.cpp:501] detection_eval = 0.247059
+I0512 11:23:20.297415   498 caffe.cpp:501] detection_eval = 0.705882
+I0512 11:23:20.297421   498 caffe.cpp:501] detection_eval = 7.07059
+I0512 11:23:20.297427   498 caffe.cpp:501] detection_eval = 2.01176
+I0512 11:23:20.297449   498 caffe.cpp:501] detection_eval = 0.206687
+I0512 11:23:20.297461   498 caffe.cpp:501] detection_eval = 0.270588
+I0512 11:23:20.297471   498 caffe.cpp:501] detection_eval = 0.670588
+I0512 11:23:20.297796   498 caffe.cpp:546] class AP 1: 0.894039
+I0512 11:23:20.298820   498 caffe.cpp:546] class AP 2: 0.882588
+I0512 11:23:20.299151   498 caffe.cpp:546] class AP 3: 0.902024
+I0512 11:23:20.299157   498 caffe.cpp:552] Test net output mAP #0: detection_eval = 0.892884
+I0512 11:23:20.299161   498 caffe.cpp:556] =========================
+I0512 11:23:20.299165   498 caffe.cpp:557] Sparsity of the test net:
+I0512 11:23:20.300318   498 net.cpp:2769] Num Params(28), Sparsity (zero_weights/count): 
+I0512 11:23:20.300326   498 net.cpp:2780] conv1a_param_0(0.343) 
+I0512 11:23:20.300338   498 net.cpp:2780] conv1b_param_0(0.674) 
+I0512 11:23:20.300345   498 net.cpp:2780] ctx_output1/relu_mbox_conf_param_0(0) 
+I0512 11:23:20.300351   498 net.cpp:2780] ctx_output1/relu_mbox_loc_param_0(0) 
+I0512 11:23:20.300359   498 net.cpp:2780] ctx_output1_param_0(0) 
+I0512 11:23:20.300364   498 net.cpp:2780] ctx_output2/relu_mbox_conf_param_0(0) 
+I0512 11:23:20.300371   498 net.cpp:2780] ctx_output2/relu_mbox_loc_param_0(0) 
+I0512 11:23:20.300377   498 net.cpp:2780] ctx_output2_param_0(0) 
+I0512 11:23:20.300381   498 net.cpp:2780] ctx_output3/relu_mbox_conf_param_0(0) 
+I0512 11:23:20.300387   498 net.cpp:2780] ctx_output3/relu_mbox_loc_param_0(0) 
+I0512 11:23:20.300390   498 net.cpp:2780] ctx_output3_param_0(0) 
+I0512 11:23:20.300395   498 net.cpp:2780] ctx_output4/relu_mbox_conf_param_0(0) 
+I0512 11:23:20.300398   498 net.cpp:2780] ctx_output4/relu_mbox_loc_param_0(0) 
+I0512 11:23:20.300403   498 net.cpp:2780] ctx_output4_param_0(7.63e-06) 
+I0512 11:23:20.300410   498 net.cpp:2780] ctx_output5/relu_mbox_conf_param_0(0) 
+I0512 11:23:20.300415   498 net.cpp:2780] ctx_output5/relu_mbox_loc_param_0(0) 
+I0512 11:23:20.300420   498 net.cpp:2780] ctx_output5_param_0(0) 
+I0512 11:23:20.300428   498 net.cpp:2780] ctx_output6/relu_mbox_conf_param_0(0) 
+I0512 11:23:20.300434   498 net.cpp:2780] ctx_output6/relu_mbox_loc_param_0(0) 
+I0512 11:23:20.300438   498 net.cpp:2780] ctx_output6_param_0(0) 
+I0512 11:23:20.300442   498 net.cpp:2780] res2a_branch2a_param_0(0.781) 
+I0512 11:23:20.300446   498 net.cpp:2780] res2a_branch2b_param_0(0.653) 
+I0512 11:23:20.300448   498 net.cpp:2780] res3a_branch2a_param_0(0.784) 
+I0512 11:23:20.300452   498 net.cpp:2780] res3a_branch2b_param_0(0.75) 
+I0512 11:23:20.300456   498 net.cpp:2780] res4a_branch2a_param_0(0.849) 
+I0512 11:23:20.300458   498 net.cpp:2780] res4a_branch2b_param_0(0.843) 
+I0512 11:23:20.300462   498 net.cpp:2780] res5a_branch2a_param_0(0.844) 
+I0512 11:23:20.300464   498 net.cpp:2780] res5a_branch2b_param_0(0.85) 
+I0512 11:23:20.300468   498 net.cpp:2784] Total Sparsity (zero_weights/count) =  (1.97991e+06/3.10435e+06) 0.638
+I0512 11:23:20.300474   498 caffe.cpp:559] =========================
+caffe.bin: ../nptl/pthread_mutex_lock.c:425: __pthread_mutex_lock_full: Assertion `INTERNAL_SYSCALL_ERRNO (e, __err) != ESRCH || !robust' failed.
+*** Aborted at 1589282600 (unix time) try "date -d @1589282600" if you are using GNU date ***
+PC: @                0x0 (unknown)
+*** SIGABRT (@0x1f2) received by PID 498 (TID 0x7f455bfff700) from PID 498; stack trace: ***
+    @     0x7f45fa1cef20 (unknown)
+    @     0x7f45fa1cee97 gsignal
+    @     0x7f45fa1d0801 abort
+    @     0x7f45fa1c039a (unknown)
+    @     0x7f45fa1c0412 __assert_fail
+    @     0x7f45f9f7af3c __pthread_mutex_lock_full
+    @     0x7f45fbd7f128 boost::mutex::lock()
+    @     0x7f45fbd80020 boost::unique_lock<>::lock()
+    @     0x7f45fc21789f caffe::BlockingQueue<>::push()
+    @     0x7f45fbdfe49e caffe::AnnotatedDataLayer<>::load_batch()
+    @     0x7f45fbe38476 caffe::BasePrefetchingDataLayer<>::InternalThreadEntryN()
+    @     0x7f45fbdac7ee caffe::InternalThread::entry()
+    @     0x7f45fbdae54b boost::detail::thread_data<>::run()
+    @     0x7f45fb3e67ee thread_proxy
+    @     0x7f45f9f786db start_thread
+    @     0x7f45fa2b188f clone
+    @                0x0 (unknown)

@@ -1,0 +1,12 @@
+F0513 02:59:48.806588   566 common.cpp:473] Check failed: error == cudaSuccess (101 vs. 0)  invalid device ordinal
+*** Check failure stack trace: ***
+    @     0x7f459b7304dd  google::LogMessage::Fail()
+    @     0x7f459b738071  google::LogMessage::SendToLog()
+    @     0x7f459b72fecd  google::LogMessage::Flush()
+    @     0x7f459b73176a  google::LogMessageFatal::~LogMessageFatal()
+    @     0x7f45990cdcdd  caffe::Caffe::Properties::Properties()
+    @     0x7f45990ce1f4  caffe::Caffe::props()
+    @     0x558499726292  main
+    @     0x7f4597508b97  __libc_start_main
+    @     0x5584997275da  _start
+    @              (nil)  (unknown)

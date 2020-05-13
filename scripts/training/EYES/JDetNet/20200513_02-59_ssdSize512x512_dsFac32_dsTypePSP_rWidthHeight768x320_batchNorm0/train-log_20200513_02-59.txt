@@ -1,0 +1,55 @@
+Logging output to training/EYES/JDetNet/20200513_02-59_ssdSize512x512_dsFac32_dsTypePSP_rWidthHeight768x320_batchNorm0/train-log_20200513_02-59.txt
+training/EYES/JDetNet/20200513_02-59_ssdSize512x512_dsFac32_dsTypePSP_rWidthHeight768x320_batchNorm0/test
+{'type':'Adam','base_lr':1e-2,'max_iter':120000,'lr_policy':'poly','power':4.0,'stepvalue':[30000,45000,300000],'regularization_type':'L1','weight_decay':1e-5,'sparse_mode':1,'display_sparsity':1000}
+{'config_name':'training/EYES/JDetNet/20200513_02-59_ssdSize512x512_dsFac32_dsTypePSP_rWidthHeight768x320_batchNorm0/test','model_name':'ssdJacintoNetV2','dataset':'EYES','gpus':'0,1','train_data':'/workspace/data/lmdb/EYES/EYES_trainval_lmdb','test_data':'/workspace/data/lmdb/EYES/official_test_850images','name_size_file':'/workspace/caffe-jacinto/data/EYES/test_name_size.txt','label_map_file':'/workspace/caffe-jacinto/data/EYES/labelmap_eye.prototxt','num_test_image':1151,'num_classes':4,'min_ratio':10,'max_ratio':90,
+'log_space_steps':2,'use_difficult_gt':0,'ignore_difficult_gt':0,'evaluate_difficult_gt':0,'pretrain_model':'/workspace/caffe-jacinto-models/scripts/training/EYES/JDetNet/20200511_10-37_ssdSize512x512_dsFac32_dsTypePSP_rWidthHeight768x320_batchNorm0/sparse/EYES_ssdJacintoNetV2_iter_20000.caffemodel','use_image_list':0,'shuffle':0,'num_output':8,'resize_width':768,'resize_height':320,'crop_width':768,'crop_height':320,'batch_size':16,'test_batch_size':10,'caffe_cmd':'test_detection','display_sparsity':1,'aspect_ratios_type':1,'ssd_size':'512x512','small_objs':1,'min_dim':368,'concat_reg_head':0,
+'fully_conv_at_end':0,'first_hd_same_op_ch':1,'ker_mbox_loc_conf':1,'base_nw_3_head':0,'reg_head_at_ds8':1,'ds_fac':32,'ds_type':'PSP','rhead_name_non_linear':0,'force_color':0,'num_intermediate':512,'use_batchnorm_mbox':0,'chop_num_heads':0}
+caffe_root = :  /workspace/caffe-jacinto/build/tools/caffe.bin
+config_param.ds_fac : 32
+config_param.stride_list : [2, 2, 2, 2, 2]
+num_gpus: 2  gpulist: ['0', '1']
+min_dim = 368
+ratio_step_size: 20
+minsizes = [14.72, 36.8, 110.4, 184.0, 257.6, 331.2]
+maxsizes = [36.8, 110.4, 184.0, 257.6, 331.2, 404.8]
+ARs: [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
+training/EYES/JDetNet/20200513_02-59_ssdSize512x512_dsFac32_dsTypePSP_rWidthHeight768x320_batchNorm0/test/train.prototxt
+training/EYES/JDetNet/20200513_02-59_ssdSize512x512_dsFac32_dsTypePSP_rWidthHeight768x320_batchNorm0/test_quantize
+{'type':'Adam','base_lr':1e-2,'max_iter':120000,'lr_policy':'poly','power':4.0,'stepvalue':[30000,45000,300000],'regularization_type':'L1','weight_decay':1e-5,'sparse_mode':1,'display_sparsity':1000}
+{'config_name':'training/EYES/JDetNet/20200513_02-59_ssdSize512x512_dsFac32_dsTypePSP_rWidthHeight768x320_batchNorm0/test_quantize','model_name':'ssdJacintoNetV2','dataset':'EYES','gpus':'0,1','train_data':'/workspace/data/lmdb/EYES/EYES_trainval_lmdb','test_data':'/workspace/data/lmdb/EYES/official_test_850images','name_size_file':'/workspace/caffe-jacinto/data/EYES/test_name_size.txt','label_map_file':'/workspace/caffe-jacinto/data/EYES/labelmap_eye.prototxt','num_test_image':1151,'num_classes':4,'min_ratio':10,'max_ratio':90,
+'log_space_steps':2,'use_difficult_gt':0,'ignore_difficult_gt':0,'evaluate_difficult_gt':0,'pretrain_model':'/workspace/caffe-jacinto-models/scripts/training/EYES/JDetNet/20200511_10-37_ssdSize512x512_dsFac32_dsTypePSP_rWidthHeight768x320_batchNorm0/sparse/EYES_ssdJacintoNetV2_iter_20000.caffemodel','use_image_list':0,'shuffle':0,'num_output':8,'resize_width':768,'resize_height':320,'crop_width':768,'crop_height':320,'batch_size':16,'test_batch_size':10,'caffe_cmd':'test_detection','aspect_ratios_type':1,'ssd_size':'512x512','small_objs':1,'min_dim':368,'concat_reg_head':0,
+'fully_conv_at_end':0,'first_hd_same_op_ch':1,'ker_mbox_loc_conf':1,'base_nw_3_head':0,'reg_head_at_ds8':1,'ds_fac':32,'ds_type':'PSP','rhead_name_non_linear':0,'force_color':0,'num_intermediate':512,'use_batchnorm_mbox':0,'chop_num_heads':0}
+caffe_root = :  /workspace/caffe-jacinto/build/tools/caffe.bin
+config_param.ds_fac : 32
+config_param.stride_list : [2, 2, 2, 2, 2]
+num_gpus: 2  gpulist: ['0', '1']
+min_dim = 368
+ratio_step_size: 20
+minsizes = [14.72, 36.8, 110.4, 184.0, 257.6, 331.2]
+maxsizes = [36.8, 110.4, 184.0, 257.6, 331.2, 404.8]
+ARs: [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
+training/EYES/JDetNet/20200513_02-59_ssdSize512x512_dsFac32_dsTypePSP_rWidthHeight768x320_batchNorm0/test_quantize/train.prototxt
+F0513 02:59:48.649732   562 common.cpp:473] Check failed: error == cudaSuccess (101 vs. 0)  invalid device ordinal
+*** Check failure stack trace: ***
+    @     0x7f7f837d74dd  google::LogMessage::Fail()
+    @     0x7f7f837df071  google::LogMessage::SendToLog()
+    @     0x7f7f837d6ecd  google::LogMessage::Flush()
+    @     0x7f7f837d876a  google::LogMessageFatal::~LogMessageFatal()
+    @     0x7f7f81174cdd  caffe::Caffe::Properties::Properties()
+    @     0x7f7f811751f4  caffe::Caffe::props()
+    @     0x564fb9a61292  main
+    @     0x7f7f7f5afb97  __libc_start_main
+    @     0x564fb9a625da  _start
+    @              (nil)  (unknown)
+F0513 02:59:48.806588   566 common.cpp:473] Check failed: error == cudaSuccess (101 vs. 0)  invalid device ordinal
+*** Check failure stack trace: ***
+    @     0x7f459b7304dd  google::LogMessage::Fail()
+    @     0x7f459b738071  google::LogMessage::SendToLog()
+    @     0x7f459b72fecd  google::LogMessage::Flush()
+    @     0x7f459b73176a  google::LogMessageFatal::~LogMessageFatal()
+    @     0x7f45990cdcdd  caffe::Caffe::Properties::Properties()
+    @     0x7f45990ce1f4  caffe::Caffe::props()
+    @     0x558499726292  main
+    @     0x7f4597508b97  __libc_start_main
+    @     0x5584997275da  _start
+    @              (nil)  (unknown)
